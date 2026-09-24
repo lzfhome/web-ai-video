@@ -239,3 +239,48 @@ data/
 ### 9.5 本会话其他
 - OpencodeRecord.md 本文件本身：用户要求随仓库同步，作为跨机器恢复会话的入口（clone→读 md→启动）
 - 待办补充：git 化（.gitignore 排除 data/ 大文件）尚未做，用户问过两次
+
+---
+
+## 10. Git 化与仓库同步（2026-09-24 后续）
+
+### 10.1 磁盘四分类最终结构（用户拍板）
+```
+video-studio/data/
+├── gen_videos/   🎬 AI 生成视频
+├── cut_videos/   ✂ 剪辑视频
+├── gen_images/   🖼 AI 生成图片
+├── cut_frames/   🎞 抽帧图片（原 frames 改名 cut_frames）
+└── refs/         用户上传素材
+```
+- 已删除遗留空目录 `uploads/`、`videos/`；`_save_data_image` 改存 `refs/`
+- 后端 `_video_path`/`_upload_path` 兼容旧路径
+
+### 10.2 提示词记录
+- `data/prompts.jsonl`（追加式，每行 JSON：`{time, kind, model, prompt, ref}`）
+- 四类提交都记录：video / image / chain / extend（在 create 成功后调用 `_log_prompt`）
+
+### 10.3 配置与密钥拆分（重要，安全）
+- `config.json`：只存非敏感配置（models/model_caps/defaults 等），**入库**
+- `config.secrets.json`：6 个密钥字段（api_key/base_url/public_base_url/access_key_id/secret_access_key/usage_apikey_id），**不入库**（gitignore）
+- `config.py`：加载 config.json 后用 config.secrets.json 覆盖密钥；环境变量 `ARK_API_KEY`/`ARK_BASE_URL` 仍可覆盖
+- 已删除 `config.example.json`（用户要求），git 历史中无密钥/example/bak 文件
+
+### 10.4 Git 仓库与推送
+- 仓库：`git@github.com:lzfhome/web-ai-video.git`（**https://github.com/lzfhome/web-ai-video**）
+- `.gitignore` 排除：`config.secrets.json`、`data/`、`*.bak.json`、`*.mp4/*.mov/*.wav`（教学视频超 GitHub 100MB 限制）、`.sid`、`__pycache__`
+- 教训：`ai-learning/故事板10套案例/` 里 10 个教学视频（最大 127MB）曾把 `.git` 撑到 460M → 用 `git rm --cached '*.mp4'` + 重写提交 + `git gc` 清理到 92M 后推送成功
+- 路径带引号（core.quotepath）导致 `git rm $(git ls-files | rg ...)` 失败 → 用 pathspec 通配 `git rm --cached '*.mp4'` 解决
+- 已推送 2 次：初始全量（main）+ 案例2 Readme.md
+
+### 10.5 案例2（用户自己总结）
+- `ai-learning/lzf/内容分镜学习/基础案例/2/Readme.md`：mini 尽量延长视频的分段衔接思路（Seedream→4×4 图→Seedance→取尾帧→进入第二段+多张角色/服装参考图）
+
+### 10.6 家里恢复运行步骤（重要）
+```
+git clone git@github.com:lzfhome/web-ai-video.git
+cd web-ai-video/video-studio
+pip install fastapi uvicorn pydantic httpx python-multipart
+# 创建 config.secrets.json 填入密钥（参照本机该文件格式）
+uvicorn app:app --host 0.0.0.0 --port 8000
+```
