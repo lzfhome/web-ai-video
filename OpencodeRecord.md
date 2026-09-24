@@ -284,3 +284,8 @@ pip install fastapi uvicorn pydantic httpx python-multipart
 # 创建 config.secrets.json 填入密钥（参照本机该文件格式）
 uvicorn app:app --host 0.0.0.0 --port 8000
 ```
+
+### 10.7 run.sh 行为（用户要求）
+- **缺失 `config.secrets.json` 时：打印创建指引（字段模板 + 获取地址）并 `exit 1`，不再照常启动**
+- 有密钥文件才正常启动；`chmod +x run.sh` 后 `./run.sh` 即可
+- 已推送 `ed0aa4e`
