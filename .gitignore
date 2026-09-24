@@ -1,0 +1,32 @@
+# ===== 密钥与敏感配置（绝不提交） =====
+video-studio/config.secrets.json
+
+# ===== 本地媒体/数据（大文件，不同步） =====
+video-studio/data/
+
+# ===== Python =====
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# ===== opencode / 会话 =====
+opencode.sid
+opencode.list
+*.sid
+*.log
+
+# ===== 系统 =====
+.DS_Store
+Thumbs.db
+# 本地备份文件（不同步）
+video-studio/*.bak.json
+
+# 配置文件（密钥/示例都不入库，克隆后自行创建）
+video-studio/config.example.json
+
+# 大视频文件（超过 GitHub 100MB 限制，不同步）
+*.mp4
+*.mov
+*.wav
