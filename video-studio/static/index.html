@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>视频生成工作台</title>
+  <link rel="stylesheet" href="/static/style.css?v=4" />
+</head>
+<body>
+  <header>
+    <h1><span class="logo">▶</span>视频生成工作台</h1>
+    <nav class="tabs">
+      <button class="tab active" data-view="create">创作</button>
+      <button class="tab" data-view="assets">资产</button>
+      <button class="tab" data-view="usage">用量</button>
+      <button class="tab" data-view="cap">能力</button>
+    </nav>
+    <div id="conn-status"><span class="dot" id="conn-dot"></span><span id="conn-text">连接中…</span></div>
+    <div class="avatar-box" id="avatar-box" title="点击头像">
+      <img id="avatar-img" alt="头像" hidden />
+      <span id="avatar-placeholder">👤</span>
+    </div>
+  </header>
+  <div class="avatar-menu" id="avatar-menu" hidden>
+    <button id="avatar-upload">🖼 更换头像</button>
+    <button id="avatar-as-material">🎬 用作素材（加入素材区）</button>
+  </div>
+  <input type="file" id="avatar-input" accept="image/jpeg,image/png,image/webp" hidden />
+
+  <div class="banner" id="config-banner" hidden>
+    ⚠ 尚未配置 API Key：请编辑 <code>video-studio/config.json</code> 中的 <code>api_key</code> 后重启服务
+  </div>
+
+  <!-- ===== 创作 ===== -->
+  <div id="view-create">
+    <div class="layout">
+      <div class="side">
+        <div class="section">
+          <h2>模型</h2>
+          <div class="settings-grid">
+            <div class="field full">
+              <label>模型（切换后能力自动适配）</label>
+              <select id="model" data-tip="选择视频生成模型，选中后下方列出该模型的能力，界面自动显示/隐藏对应功能。\n· mini：高性价比，480p/720p，仅首帧图生，不支持编辑/延长\n· fast：快，支持首尾帧/参考图\n· 2.0：专业级，最高4k，支持编辑/延长/画面运动\n· 2.5：长叙事，30秒/段+多轮延长，全模态参考"></select>
+            </div>
+            <div class="field full" id="task-type-field">
+              <label>任务类型</label>
+              <select id="task-type" data-tip="任务类型：告诉模型这次做什么。\n· auto：自动判断（推荐）\n· 文本/图像：文生视频 / 图生视频\n· 编辑：对参考视频增删改（需参考视频，仅2.0/2.5）\n· 延长：对参考视频续写（需参考视频，仅2.0/2.5）"></select>
+            </div>
+          </div>
+          <div class="chips" id="extend-tags" hidden style="margin-top:8px;">
+            <span class="chip" id="tag-extend" data-tip="视频延长：让一段已有视频继续向前/向后续写，画面/风格延续。\n· 什么时候用：想把短片变长、剧情连续\n· 怎么做：先添加「参考视频」→ 点此标签自动切到「视频延长」并填示例提示词 → 生成\n· 仅 2.0/2.5 支持">🔗 视频延长</span>
+            <span class="chip" id="tag-edit" data-tip="视频编辑：对参考视频局部修改（加东西/删东西/换主体/改配乐）。\n· 什么时候用：生成的视频想改某一部分\n· 怎么做：添加「参考视频」→ 点此标签切到「视频编辑」并填示例提示词 → 生成\n· 仅 2.0/2.5 支持">✏️ 视频编辑</span>
+          </div>
+          <div class="hint-box" id="model-note" hidden></div>
+        </div>
+
+        <div class="section" id="media-section">
+          <h2>素材 <span class="sub" id="media-count"></span></h2>
+          <label class="toggle" id="chain-toggle-wrap" style="justify-content:flex-start;gap:8px;margin-bottom:10px;" hidden>
+            <input type="checkbox" id="chain-toggle" checked /> 尾帧衔接（上一段尾帧接下一段首帧）
+          </label>
+          <button class="media-add" id="load-story-prompts" style="width:100%;margin-bottom:10px;" hidden>📖 载入 story_prompts（按顺序填入每张图）</button>
+          <button class="media-add" id="load-single-prompts" style="width:100%;margin-bottom:10px;" hidden>📖 载入模板（single_prompts 单图）</button>
+          <p class="tip-muted" id="multi-hint" style="margin-bottom:8px;" hidden>多图模式：每张图一段。可在主框多行描述 →「✓ 应用为分镜」自动分配，或逐张在下面填写。</p>
+          <div class="media-list" id="media-list"></div>
+          <div class="media-actions">
+            <button class="media-add" id="add-image" data-kind="image">＋ 图片</button>
+            <button class="media-add" id="add-audio" data-kind="audio">＋ 音频</button>
+            <button class="media-add" id="add-video" data-kind="video">＋ 视频链接</button>
+            <button class="media-add" id="upload-video" data-kind="video">⤒ 上传视频</button>
+          </div>
+          <div class="hint-box" id="media-note" hidden></div>
+          <input type="file" id="image-input" accept="image/jpeg,image/png,image/webp" multiple hidden />
+          <input type="file" id="audio-input" accept="audio/*" hidden />
+          <input type="file" id="video-input" accept="video/mp4,video/quicktime" hidden />
+        </div>
+
+        <div class="section">
+          <h2>生成参数</h2>
+          <div id="video-params">
+            <div class="settings-grid">
+              <div class="field">
+                <label>分辨率</label>
+                <select id="resolution"></select>
+              </div>
+              <div class="field">
+                <label>画面比例</label>
+                <select id="ratio">
+                  <option value="16:9">16:9</option>
+                  <option value="9:16">9:16</option>
+                  <option value="4:3">4:3</option>
+                  <option value="3:4">3:4</option>
+                  <option value="1:1">1:1</option>
+                  <option value="21:9">21:9</option>
+                  <option value="adaptive">adaptive（自动）</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>时长（秒）</label>
+                <input type="number" id="duration" value="5" min="-1" max="30" data-tip="视频时长：-1=智能；或 4~30 秒（mini/fast/2.0 最长 15，2.5 最长 30）。图生视频最短 4 秒。" />
+              </div>
+              <div class="field">
+                <label>随机种子</label>
+                <div class="seed-row">
+                  <input type="number" id="seed" value="-1" min="-1" data-tip="随机种子：控制生成的随机性。\n· -1（默认）= 每次随机，效果每次不同\n· 固定一个数字（点 🎲 生成）＝同一提示词+同一 seed 出图/出片更接近，适合保持角色/画面一致\n· 批量时建议固定 seed，各段画面更统一" />
+                  <button type="button" id="seed-rand" class="seed-btn" title="随机生成一个固定种子">🎲</button>
+                </div>
+              </div>
+            </div>
+            <div class="toggles" style="margin-top:12px;">
+              <label class="toggle" id="camera-fixed-wrap" data-tip="画面运动：控制镜头是否固定。\n· 勾选=镜头固定，画面静止（适合静态构图/特写）\n· 不勾=镜头可运动/运镜（更有电影感）\n· 仅 Seedance 2.0/2.5 支持；mini/fast 不支持（此开关会自动隐藏）">画面运动 <input type="checkbox" id="camera-fixed" /></label>
+              <label class="toggle" data-tip="带声音：生成与画面同步的音频（人声/音效/背景音乐）。\n· 勾选=有声视频；不勾=无声\n· 技巧：提示词里把对白放双引号内，声音更准\n· 所有 Seedance 模型都支持">带声音 <input type="checkbox" id="generate-audio" checked /></label>
+              <label class="toggle" data-tip="加水印：在视频右下角加「AI 生成」水印。\n· 勾选=加水印；不勾=无水印\n· 一般个人创作不勾">加水印 <input type="checkbox" id="watermark" /></label>
+            </div>
+          </div>
+          <div id="image-settings" style="display:none">
+            <div class="settings-grid">
+              <div class="field">
+                <label>图片比例</label>
+                <select id="img-size">
+                  <option value="2560x1440">16:9 · 2560×1440</option>
+                  <option value="1440x2560">9:16 · 1440×2560</option>
+                  <option value="2304x1728">4:3 · 2304×1728</option>
+                  <option value="1728x2304">3:4 · 1728×2304</option>
+                  <option value="2048x2048">1:1 · 2048×2048</option>
+                  <option value="3024x1296">21:9 · 3024×1296</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>数量</label>
+                <input type="number" id="img-n" value="1" min="1" max="4" />
+              </div>
+            </div>
+            <div class="toggles" style="margin-top:12px;">
+              <label class="toggle" id="img-seq-wrap" data-tip="组图生成：一条提示词生成一组内容关联的图片（如同一角色不同动作/场景，最多15张）。\n· 仅 Seedream 5.0 lite / 4.x 支持；5.0 pro 不支持组图（会自动隐藏）">组图生成 <input type="checkbox" id="img-seq" /></label>
+              <label class="toggle" data-tip="在生成的图片右下角加「AI 生成」水印">加水印 <input type="checkbox" id="img-watermark" /></label>
+            </div>
+            <div class="section" id="img-ref-section" style="margin-top:14px;">
+              <h2>参考图 <span class="sub">（可选 · 图生图）</span></h2>
+              <div class="media-list" id="img-ref-list"></div>
+              <div class="media-actions">
+                <button class="media-add" id="img-ref-add">＋ 参考图（多选）</button>
+              </div>
+              <input type="file" id="img-ref-input" accept="image/jpeg,image/png,image/webp" multiple hidden />
+            </div>
+          </div>
+        </div>
+
+        <details class="tips" id="extend-tips" hidden>
+          <summary>💡 视频延长 / 编辑 快捷用法</summary>
+          <div class="tip-block">
+            <p class="tip-title">视频延长（续写）</p>
+            <p class="tip-desc">添加「参考视频」，任务类型选「视频延长」，提示词写 延长 / 续写 / 延续。</p>
+            <div class="chips">
+              <span class="chip" data-fill="向后延长 @视频1，@图片1 的角色从天而降，画面保持同一风格">示例：向后延长</span>
+              <span class="chip" data-fill="续写 @视频1 前 5 秒，保持构图与光影一致">示例：续写前5秒</span>
+            </div>
+            <p class="tip-title">视频编辑</p>
+            <p class="tip-desc">添加「参考视频」，任务类型选「视频编辑」，提示词写 编辑 / 加上 / 删掉 / 替换。</p>
+            <div class="chips">
+              <span class="chip" data-fill="@视频1 中加一些小动物，活跃画面">示例：增加物体</span>
+              <span class="chip" data-fill="把 @视频1 的人物替换为 @图片1">示例：替换主体</span>
+              <span class="chip" data-fill="删掉 @视频1 的背景音乐">示例：删除音乐</span>
+            </div>
+            <p class="tip-muted">编辑/延长任务会自动锁定 ratio=adaptive、时长=智能(-1)。点击示例自动填入提示词。</p>
+          </div>
+        </details>
+
+        <details class="tips" id="extend-mode" hidden>
+          <summary>🎬 长片延长模式（一段视频续写成长片）</summary>
+          <div class="tip-block">
+            <label style="font-size:12px;color:var(--muted);">参考视频（公网 URL，或本地上传后填文件名）</label>
+            <input id="ext-video" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:12.5px;margin:4px 0;" placeholder="https://… 或 local://文件名" />
+            <button class="mini-btn2" id="ext-upload-video" style="margin-top:2px;">⤒ 上传本地视频</button>
+            <div class="tip-muted" id="ext-tunnel-hint" style="margin-top:6px;"></div>
+            <input type="file" id="ext-video-input" accept="video/mp4,video/quicktime" hidden />
+            <div class="settings-grid" style="margin-top:8px;">
+              <div class="field"><label>目标总时长（秒）</label><input type="number" id="ext-target" value="30" min="10" max="600" /></div>
+              <div class="field"><label>每轮延长（秒）</label><input type="number" id="ext-round" value="5" min="1" max="30" /></div>
+            </div>
+            <textarea id="ext-prompt" style="width:100%;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px;font-size:12.5px;min-height:50px;margin-top:8px;font-family:inherit;line-height:1.5;" placeholder="延长提示词（默认：向后延长 @视频1，保持画风一致，画面连贯）"></textarea>
+            <label class="toggle" id="ext-enabled-wrap" style="justify-content:flex-start;gap:8px;margin-top:8px;">
+              <input type="checkbox" id="ext-enabled" /> 启用长片延长（用主「✦ 生成」按钮提交）
+            </label>
+            <div id="ext-status" style="margin-top:8px;font-size:12.5px;color:var(--muted);line-height:1.7;"></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="main create-main">
+        <div class="prompt-panel">
+          <h2 class="hero-title" id="prompt-title">直接填写描述，生成视频 / 图片</h2>
+          <textarea id="prompt" class="hero-input" placeholder="输入你的视频/图片提示词…&#10;多张图时：每行一个镜头，点「✓ 应用为分镜」自动分到每张图；或直接点「✦ 生成」自动拆分"></textarea>
+          <div class="chat-tools" style="justify-content:center;margin-top:14px;">
+            <button id="apply-storyboard" class="pill-btn" data-tip="应用为分镜：把主框文本按行/编号拆开，填入左侧每张图的描述框（不生成）。\n· 多行多图：每行对应一张图\n· 有编号（1. 2. 3.）：按编号填入对应图\n· 单张图：整段填入该图">✓ 应用为分镜</button>
+            <button id="generate-btn" class="pill-btn primary" data-tip="生成：提交并开始生成。\n· 图片模型：文生图/图生图\n· 多张图：主框多行自动分到每张图，批量生成（尾帧衔接可选）\n· 单张/无图：用主框直接生成一条\n· 生成后在「资产」页看进度和下载">✦ 生成</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 资产 ===== -->
+  <div class="view" id="view-assets" hidden>
+    <div class="main">
+      <div class="main-head">
+        <h2>我的资产 <span id="task-count"></span></h2>
+        <button id="clear-all">清空记录</button>
+      </div>
+      <div id="asset-filters">
+        <button class="asset-filter active" data-f="all">全部</button>
+        <button class="asset-filter" data-f="gen">🎬 AI 生成视频</button>
+        <button class="asset-filter" data-f="cut">✂ 剪辑视频</button>
+        <button class="asset-filter" data-f="img">🖼 AI 生成图片</button>
+        <button class="asset-filter" data-f="frame">🎞 抽帧图片</button>
+      </div>
+      <div id="batch-progress" hidden></div>
+      <div class="asset-section" id="img-section">
+        <div class="asset-sec-head">🖼 图片任务</div>
+        <div id="image-jobs"></div>
+      </div>
+      <div class="asset-section" id="vid-section">
+        <div class="asset-sec-head">🎬 视频</div>
+        <div class="gallery" id="gallery"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 用量 ===== -->
+  <div class="view" id="view-usage" hidden>
+    <div class="main">
+      <div class="main-head"><h2>📊 用量统计</h2></div>
+      <div id="usage-body"></div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toasts"></div>
+  <div id="global-loading" hidden><span class="mini-spinner"></span><span id="loading-msg">处理中…</span></div>
+  <div id="tooltip" class="tooltip-box" hidden></div>
+
+  <div id="lightbox" hidden>
+    <img id="lightbox-img" alt="" />
+    <span id="lightbox-close">✕</span>
+  </div>
+
+  <!-- 移动资源弹窗 -->
+  <div class="modal" id="move-modal" hidden>
+    <div class="modal-box modal-box-lg">
+      <div class="modal-head">
+        <h3>移动资源</h3>
+        <button id="move-close" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="move-item" id="move-item"></div>
+        <div class="move-browse">
+          <div class="move-path" id="move-path"></div>
+          <div id="move-up-row" style="margin-bottom:8px;"></div>
+          <div id="move-folders"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button id="move-cancel" class="pill-btn">取消</button>
+        <button id="move-ok" class="pill-btn primary">移动到这里</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模板选择弹窗 -->
+  <div class="modal" id="tpl-modal" hidden>
+    <div class="modal-box modal-box-lg">
+      <div class="modal-head">
+        <h3>选择模板</h3>
+        <button id="tpl-close" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body" id="tpl-list"></div>
+    </div>
+  </div>
+
+  <!-- 截取视频弹窗 -->
+  <div class="modal" id="cut-modal" hidden>
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3>截取视频</h3>
+        <button id="cut-close" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="move-item" id="cut-item"></div>
+        <div class="cut-group">
+          <div class="cut-group-label">输出类型</div>
+          <div class="seg-row">
+            <label class="seg"><input type="radio" name="cut-kind" value="clip" checked /><span>视频片段</span></label>
+            <label class="seg"><input type="radio" name="cut-kind" value="frames" /><span>帧图（N 张）</span></label>
+          </div>
+        </div>
+        <div class="cut-group">
+          <div class="cut-group-label">截取位置</div>
+          <div class="seg-row">
+            <label class="seg"><input type="radio" name="cut-mode" value="start" checked /><span>开头</span></label>
+            <label class="seg"><input type="radio" name="cut-mode" value="end" /><span>结尾</span></label>
+          </div>
+        </div>
+        <div class="field">
+          <label>截取时长（秒）</label>
+          <input type="number" id="cut-seconds" value="5" min="1" max="300" />
+        </div>
+        <div class="field" id="cut-frames-opt" style="display:none;">
+          <label>抽取帧数（1-60）</label>
+          <input type="number" id="cut-frames" value="8" min="1" max="60" />
+          <label style="margin-top:10px;">取帧区间（秒，可选）</label>
+          <input type="text" id="cut-range" placeholder="如 2-4（开始-结束），留空 = 开头-结尾整段" />
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button id="cut-cancel" class="pill-btn">取消</button>
+        <button id="cut-ok" class="pill-btn primary">开始截取</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="view-cap" hidden>
+    <div class="main">
+      <div class="main-head"><h2>模型能力</h2></div>
+      <div id="cap-content"></div>
+    </div>
+  </div>
+
+  <script src="/static/app.js?v=4"></script>
+</body>
+</html>
