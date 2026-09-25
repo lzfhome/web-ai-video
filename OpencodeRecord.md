@@ -289,3 +289,32 @@ uvicorn app:app --host 0.0.0.0 --port 8000
 - **缺失 `config.secrets.json` 时：打印创建指引（字段模板 + 获取地址）并 `exit 1`，不再照常启动**
 - 有密钥文件才正常启动；`chmod +x run.sh` 后 `./run.sh` 即可
 - 已推送 `ed0aa4e`
+
+---
+
+## 11. Windows 机器恢复运行（2026-09-25 追加）
+
+### 11.1 环境搭建（这台 Windows 机器）
+- 仓库位置：`D:\AIWork\web-ai-video`（全新 clone，完整历史已拉取 `git fetch --unshallow`）
+- Python：**3.12.10**，安装在 `%LOCALAPPDATA%\Programs\Python\Python312\python.exe`
+  - 安装方式：`winget install Python.Python.3.12 -e`
+  - 依赖：`pip install fastapi uvicorn pydantic httpx python-multipart`（版本：fastapi 0.141 / uvicorn 0.54 / pydantic 2.13 / httpx 0.28 / python-multipart 0.0.32）
+- ffmpeg：`winget install Gyan.FFmpeg -e`（截取/抽帧依赖；安装较慢，需耐心等）
+
+### 11.2 密钥
+- `config.secrets.json` 已创建并填入真实密钥（已被 `.gitignore` 忽略，不入库）
+- 验证：`GET /api/balance` 返回余额 **¥98.94**（AccountID 2132091834）→ 密钥有效
+
+### 11.3 Windows 启动命令
+```powershell
+cd D:\AIWork\web-ai-video\video-studio
+# 前台运行：
+%LOCALAPPDATA%\Programs\Python\Python312\python.exe -m uvicorn app:app --host 0.0.0.0 --port 8000
+```
+- 访问：`http://localhost:8000`
+- 验证接口：`GET /api/config`（默认模型 `doubao-seedance-2-0-mini-260615`）
+
+### 11.4 本机器网络备注（故障排查背景）
+- 该 Windows 机器之前的"假连接"问题：Anycast VPN 隧道卡死（界面显示已连接但流量不通，DNS 通过但 HTTP 全超时）。
+- 修复方法：重启 `AnycastService` + 客户端手动重新连接；已做桌面一键修复脚本 `修复Anycast网络.bat`。
+- 教训：批处理脚本必须 **GBK 编码 + CRLF 换行**（cmd 不认 UTF-8/LF，会撕碎命令）。
