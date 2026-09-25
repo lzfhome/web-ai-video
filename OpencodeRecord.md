@@ -318,3 +318,36 @@ cd D:\AIWork\web-ai-video\video-studio
 - 该 Windows 机器之前的"假连接"问题：Anycast VPN 隧道卡死（界面显示已连接但流量不通，DNS 通过但 HTTP 全超时）。
 - 修复方法：重启 `AnycastService` + 客户端手动重新连接；已做桌面一键修复脚本 `修复Anycast网络.bat`。
 - 教训：批处理脚本必须 **GBK 编码 + CRLF 换行**（cmd 不认 UTF-8/LF，会撕碎命令）。
+
+---
+
+## 12. Windows 首日排障与运行验证（2026-09-25 追加2）
+
+### 12.1 ffmpeg 安装（国内镜像方案）
+- 直接 gyan.dev 走墙外源（约 190KB/s，VPN 断后仅 13KB/s）**不可用**；winget 的 Gyan.FFmpeg 走 GitHub 也卡死。
+- **最优解：国内 GitHub 加速镜像 + 断点续传**。实测直连（VPN 断）：
+  | 源 | 速度 |
+  |---|---|
+  | gh-proxy.com | **2.3~19.7 MB/s** ✅ |
+  | ghfast.top | 140 KB/s |
+  | ghproxy.net | 18 KB/s |
+  | mirror.ghproxy.com | 不通 |
+- 命令：`curl -L -o ffmpeg-essentials.zip "https://gh-proxy.com/https://github.com/GyanD/codexffmpeg/releases/download/9.0.2/ffmpeg-9.0.2-essentials_build.zip"`（109MB，10 秒下完）
+- 解压到 `D:\AIWork\ffmpeg\ffmpeg-9.0.2-essentials_build\bin`，并加入**用户 PATH**。
+- **教训**：国外源挂 VPN、国内源断 VPN；别在同一个网络状态下折腾两者。
+
+### 12.2 ffmpeg 9.x 兼容性修复（重要坑，新机器必改）
+- 现象：抽帧接口报 `Unrecognized option 'vsync'`。
+- 原因：`app.py:1246` 用了旧版 ffmpeg 的 `-vsync 0`，**ffmpeg 9.x 已移除 `-vsync`**，替换为 `-fps_mode`。
+- 修复：`"-vsync", "0"` → `"-fps_mode", "passthrough"`，重启 uvicorn 后 `/api/frames` 验证通过（4 帧落盘 `data/cut_frames/`）。
+
+### 12.3 「生成卡在提交」根因（关键）
+- 现象：点「✦ 生成」后一直卡在提交（最长 120s 超时，有的调用 `timeout=None` 永不超时）。
+- **根因：Anycast 智能分流把方舟 API（`volces.com`，.com 域名）误判为走代理**——分流规则只有 `domainSuffix:["cn"]` 直连，.com 不命中，只能靠 IP 地理库，结果被送进隧道。
+- 证据：`netstat` 看到 uvicorn 到方舟(101.126.7.76:443)的连接 source 是 TUN 虚拟 IP `10.255.254.2`。
+- 测速：走隧道 4.6s；**断开 VPN 直连 1.4s**；提交任务走隧道疑似卡死、直连 1.8s 成功。
+- **结论/操作习惯：用工作台（方舟是国内 API）时断开 Anycast；push GitHub 时再挂 VPN。**
+
+### 12.4 其他
+- 测试任务 `cgt-20260925224309-k6rb6`（苹果旋转 5s）与用户已生成 `cgt-20260925224501-dscdj.mp4`、`gen_images/8f9eda817cdb37e4.jpg` 均正常；抽帧功能用用户视频实测通过。
+- uvicorn 重启注意：**必须从注入了新 PATH 的进程启动**（Start-Process 继承调用方环境），否则新进程仍找不到 ffmpeg。

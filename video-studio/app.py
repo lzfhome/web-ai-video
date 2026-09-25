@@ -1243,7 +1243,7 @@ async def extract_frames(req: FramesRequest):
             select_expr = f"lt(n\\,{req.count})"
         else:
             select_expr = f"gte(n\\,{total - req.count})"
-        cmd = ["ffmpeg", "-y", "-i", str(src), "-vf", f"select='{select_expr}'", "-vsync", "0",
+        cmd = ["ffmpeg", "-y", "-i", str(src), "-vf", f"select='{select_expr}'", "-fps_mode", "passthrough",
                "-q:v", "2", str(UP_FRAME_DIR / f"{out_id}_%03d.jpg")]
         desc = f"从 {req.task_id} {('开头' if req.mode == 'start' else '结尾')}取 {req.count} 帧"
     try:
