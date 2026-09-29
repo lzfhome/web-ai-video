@@ -1456,7 +1456,7 @@
     });
     html += `<div class="cap-note">※ 图片尺寸需 ≥ 3,686,400 像素（如 2560×1440），Seedream 5.0 最低像素要求。组图仅在 Seedream 5.0 lite 支持（界面会自动隐藏/显示）。</div>`;
     html += `</div>`;
-    html += `<div class="cap-note">⚠ 2.0 / 2.5 需在方舟控制台开通模型权限；若调用报 ModelNotOpen，说明尚未开通。</div>`;
+    html += `<div class="cap-note">✓ 2.0 / 2.5 已开通，可直接使用其全部能力。</div>`;
     el.innerHTML = html;
   }
   async function loadUsage() {
