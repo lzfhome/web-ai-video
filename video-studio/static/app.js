@@ -1380,8 +1380,8 @@
     role: { first_frame: "首帧图", last_frame: "尾帧图", reference_image: "参考图" },
   };
   const IMG_CAPS = {
-    "doubao-seedream-5-0-pro-260628": ["文生图", "图生图（参考图）", "最高画质", "多尺寸比例", "可加水印", "不支持组图"],
-    "doubao-seedream-5-0-260128": ["文生图", "图生图（参考图）", "组图（一次多条关联图）", "性价比高", "可加水印"],
+    "doubao-seedream-5-0-pro-260628": ["文生图", "图生图（单图/多图 2-10）", "图层拆分（底图+≤16图层）", "交互编辑（坐标/框选/箭头）", "最高画质", "不支持组图"],
+    "doubao-seedream-5-0-260128": ["文生图", "图生图（多图 2-14）", "组图（一次≤15张关联图）", "性价比高", "可加水印"],
   };
 
   function capVal(caps, k) {
@@ -1445,9 +1445,11 @@
       ["定位", { pro: "最强画质", lite: "性价比首选" }],
       ["文生图", { pro: true, lite: true }],
       ["图生图（参考图）", { pro: true, lite: true }],
+      ["多图参考数量", { pro: "2-10 张", lite: "2-14 张" }],
       ["组图（一条提示词出多张关联图）", { pro: false, lite: "✓（≤15 张）" }],
-      ["尺寸下限", { pro: "≥3,686,400 像素", lite: "≥3,686,400 像素" }],
-      ["多尺寸比例", { pro: true, lite: true }],
+      ["图层拆分（底图+≤16 图层）", { pro: true, lite: false }],
+      ["交互编辑（坐标/框选/箭头）", { pro: true, lite: false }],
+      ["尺寸", { pro: "1K/2K/4K 或像素（≥3,686,400）", lite: "1K/2K/4K 或像素（≥3,686,400）" }],
       ["水印开关", { pro: true, lite: true }],
       ["成本", { pro: "高（质量优先）", lite: "低（批量划算）" }],
       ["适用场景", { pro: "封面/海报/正式出图", lite: "分镜配图/批量试错" }],
@@ -1468,8 +1470,9 @@
       const items = IMG_CAPS[id] || ["文生图"];
       html += `<div class="cap-model"><b>${escapeHtml(label)}</b><span class="cap-id">${escapeHtml(id)}</span><div class="cap-chips">${items.map((f) => `<span class="cap-chip">${escapeHtml(f)}</span>`).join("")}</div></div>`;
     });
-    html += `<div class="cap-note">※ 图片尺寸需 ≥ 3,686,400 像素（如 2560×1440），Seedream 5.0 最低像素要求。组图仅在 Seedream 5.0 lite 支持（界面会自动隐藏/显示）。</div>`;
+    html += `<div class="cap-note">※ 图片尺寸支持官方命名 1K/2K/4K 或像素值，像素下限需 ≥ 3,686,400（如 2560×1440）。组图仅在 Seedream 5.0 lite 支持（界面会自动隐藏/显示）。</div>`;
     html += `</div>`;
+    html += `<div class="cap-note">📹 使用提示：Seedance 2.5 首帧/尾帧生视频要求 ratio=adaptive（app 已自动处理）；视频编辑/延长要求 duration=-1 与 ratio=adaptive（app 已自动处理）。</div>`;
     html += `<div class="cap-note">✓ 2.0 / 2.5 已开通，可直接使用其全部能力。</div>`;
     el.innerHTML = html;
   }
