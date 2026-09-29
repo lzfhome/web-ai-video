@@ -576,6 +576,11 @@
       generate_audio: $("generate-audio").checked,
       omni_reference_task_type: taskType,
     };
+    // 官方限制：2.5 首帧/尾帧生视频 ratio 必须为 adaptive
+    if ($("model").value.includes("seedance-2-5") &&
+        content.some((it) => it.type === "image_url" && (it.role === "first_frame" || it.role === "last_frame"))) {
+      body.ratio = "adaptive";
+    }
 
     submitSingle(body);
   }
@@ -609,11 +614,20 @@
   function prepareImage() {
     const prompt = $("prompt").value.trim();
     if (!prompt) { toast("请先填写图片提示词", true); return; }
+    const model = $("model").value;
     const seq = $("img-seq").checked;
     const n = seq ? 1 : Math.min(4, Math.max(1, parseInt($("img-n").value) || 1));
     const size = $("img-size").value;
+    // 官方限制：pro 多图生图参考 2-10 张，lite 2-14 张
+    if (imgRefs.length) {
+      const max = model.includes("pro") ? 10 : 14;
+      if (imgRefs.length > max) {
+        toast(`参考图最多 ${max} 张（官方限制），当前 ${imgRefs.length} 张`, true);
+        return;
+      }
+    }
     const body = {
-      model: $("model").value,
+      model,
       prompts: Array(n).fill(prompt),
       size,
       watermark: $("img-watermark").checked,
