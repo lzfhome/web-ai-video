@@ -293,6 +293,7 @@ uvicorn app:app --host 0.0.0.0 --port 8000
 ### 10.8 官方文档与能力对齐（2026-09-24）
 **官方文档入口（记录备用）：**
 - 火山方舟文档中心：https://docs.volcengine.com/docs/ark/?lang=zh
+- **模型开通管理（控制台，开通 Seedance/Seedream 用）：https://console.volcengine.com/ark/region:cn-beijing/openManagement?COMPUTER_VISION=%7B%22PageSize%22%3A10%2C%22PageNumber%22%3A2%2C%22Filter%22%3A%7B%7D%7D&LLM=%7B%7D&advancedActiveKey=model&tab=ComputerVision**
 - 视频生成-创建任务 API：https://docs.volcengine.com/docs/82379/1520757
 - 视频生成-查询任务 API：https://docs.volcengine.com/docs/82379/1521309
 - 图片生成 API：https://docs.volcengine.com/docs/82379/1541523
