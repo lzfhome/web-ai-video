@@ -290,6 +290,27 @@ uvicorn app:app --host 0.0.0.0 --port 8000
 - 有密钥文件才正常启动；`chmod +x run.sh` 后 `./run.sh` 即可
 - 已推送 `ed0aa4e`
 
+### 10.8 官方文档与能力对齐（2026-09-24）
+**官方文档入口（记录备用）：**
+- 火山方舟文档中心：https://docs.volcengine.com/docs/ark/?lang=zh
+- 视频生成-创建任务 API：https://docs.volcengine.com/docs/82379/1520757
+- 视频生成-查询任务 API：https://docs.volcengine.com/docs/82379/1521309
+- 图片生成 API：https://docs.volcengine.com/docs/82379/1541523
+- Seedance 2.5 教程：https://docs.volcengine.com/docs/82379/2607688
+- Seedance SDK 示例：https://docs.volcengine.com/docs/82379/2298881
+- 图片生成教程：https://docs.volcengine.com/docs/82379/1824121
+- 视频生成栏目：https://www.volcengine.com/docs/82379/2300461
+
+**已按文档对齐的改动：**
+1. 图片尺寸支持官方命名值 `1K/2K/4K`（下拉新增 4K/2K，默认 2K）
+2. **2.5 首帧/尾帧生视频 → 强制 ratio=adaptive**（官方要求）
+3. 图片参考图数量上限：**pro 多图生图 2-10 张，lite 2-14 张**（超限前端拦截）
+4. 能力页同步：多图参考数量、图层拆分（pro 底图+≤16图层）、交互编辑（bbox 坐标/框选/箭头）、尺寸命名值说明
+5. 已核对无需改：批量衔接已传 `return_last_frame`；延长流程已是 `ratio=adaptive + duration=-1 + omni=extend`
+6. 官方文档要点：`callback_url`(webhook 替代轮询)、`execution_expires_after`(任务超时)、视频编辑参考视频 [2,15]s 最多 3 个总长≤15s、宽高比 [0.4,2.5]
+
+**Seedance 2.0/2.5 已于 2026-09-24 开通**，能力页提示同步改为「✓ 已开通」。
+
 ---
 
 ## 11. Windows 机器恢复运行（2026-09-25 追加）
