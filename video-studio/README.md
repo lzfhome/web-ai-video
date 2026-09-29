@@ -1,110 +1,110 @@
 # 视频生成工作台
 
-基于火山方舟（Ark）视频生成 API 的本地 Web 小站，实现类似「即梦」的丝滑体验：上传图片 + 填写提示词 → 生成视频 → 在线播放/下载。
+基于火山方舟（Ark）API 的本地 Web 视频/图片生成工作台，实现类似「即梦」的体验：文生视频、图生视频、批量分镜（尾帧衔接）、长片延长、文生图/图生图/组图、ffmpeg 剪辑抽帧。
 
 ## 快速开始
 
 ```bash
-# 1. 配置 API Key：编辑 config.json，填入你的 api_key
-#    获取地址：https://console.volcengine.com/ark/region:cn-beijing/apikey
+# 1. 创建密钥文件 config.secrets.json（不入 git 仓库）
+#    格式见下方「密钥配置」，或运行 run.sh 会打印模板
 
-# 2. 启动
+# 2. 启动（缺失密钥文件会打印指引并退出）
 ./run.sh
+# 或：uvicorn app:app --host 0.0.0.0 --port 8000
 ```
 
 打开浏览器访问 http://localhost:8000
 
-## config.json
+## 密钥配置（config.secrets.json）
 
-所有配置都在这个文件里，改完重启即可。**新增/切换模型只需往这里加条目，前端自动适配。**
+密钥单独放在 `config.secrets.json`（**不入 git，克隆后需自行创建**），`config.json` 只存非敏感配置。
+
+```json
+{
+  "api_key": "ark-你的火山方舟APIKey",
+  "base_url": "https://ark.cn-beijing.volces.com/api/v3",
+  "public_base_url": "",
+  "access_key_id": "你的AK",
+  "secret_access_key": "你的SK",
+  "usage_apikey_id": "你的用量APIKeyID"
+}
+```
+
+- API Key 获取：https://console.volcengine.com/ark/region:cn-beijing/apikey
+- 模型开通：https://console.volcengine.com/ark/region:cn-beijing/openManagement
+- 也支持环境变量 `ARK_API_KEY` / `ARK_BASE_URL` 覆盖
+
+## config.json（非敏感配置，入库）
+
+改完重启即可。**新增/切换模型只需往这里加条目，前端自动适配。**
 
 | 字段 | 说明 |
 |------|------|
-| `api_key` | 火山方舟 API Key（必填） |
-| `base_url` | API 地址，一般不用改 |
-| `public_base_url` | 公网隧道地址（可选）。本地上传视频做参考时需要，如 `https://xxx.ngrok-free.app` |
 | `default_model` | 默认选中哪个模型 |
-| `models` | 模型下拉框可选项（模型 ID → 显示名） |
-| `model_caps` | 每个模型的能力：`resolutions`（分辨率）、`max_duration`（最长秒数）、`inputs`（支持的输入：text/image/video/audio）、`task_types`（任务类型：auto/text/image/edit/extend）、`max_media`（素材数量上限） |
+| `models` | 视频模型下拉（模型 ID → 显示名） |
+| `image_models` | 图片模型下拉（Seedream pro / lite） |
+| `story_models` | AI 分镜对话模型 |
+| `model_caps` | 每个视频模型能力：分辨率/时长/输入/任务类型/素材上限等 |
 | `defaults` | 生成参数默认值 |
-
-### 新增一个模型
-
-在 `models` 加一行显示名，在 `model_caps` 加一条能力配置，重启即可出现在下拉框。
 
 ## 功能
 
-- **多模态输入**：提示词（text）+ 图片（首帧/尾帧/参考图）+ 参考视频（URL）+ 参考音频（文件或 URL），自由组合
-- **任务类型**：自动判断 / 文生视频 / 图生视频 / 视频编辑 / 视频延长
-- **模型切换**：下拉选择，分辨率、时长、输入类型、任务类型、素材上限随模型自动适配
-  - Seedance 2.0 mini / fast：仅 480p/720p，文本+图片
-  - Seedance 2.0：最高 4k，支持视频/音频参考、编辑、延长
-  - Seedance 2.5：最高 1080p、最长 30s，支持编辑、延长、全模态
-- **参数自动适配**：编辑/延长/首尾帧任务自动锁定 `ratio=adaptive`、`duration=-1`
-- 图生视频：首帧 / 尾帧 / 参考图 三种图片角色
-- 任务自动轮询：排队中 → 生成中 → 已完成 / 失败
-- 生成视频自动下载到本地 `data/videos/`（规避 URL 24 小时过期问题）
-- 在线播放 + 一键下载
+- **视频生成**：文生视频 / 首帧图生 / 首尾帧 / 图生视频
+- **多模态参考**：文本 + 图片(首帧/尾帧/参考图) + 参考视频 + 参考音频；提示词 `@图片1/@视频1/@音频1` 引用
+- **批量分镜 + 尾帧衔接**：多张图逐段生成，上一段尾帧接下一段首帧，长剧情连续（自动传 `return_last_frame`）
+- **长片延长**：参考视频续写，多轮延长直到目标时长（自动 `ratio=adaptive + duration=-1`）
+- **图片生成**：Seedream 文生图/图生图/组图；后台异步任务，资产页看进度；多图参考数量限制（pro 2-10 / lite 2-14）；尺寸支持 2K/4K 命名值
+- **ffmpeg 剪辑**：视频截取片段（开头/结尾+秒数）；抽帧（前 N 帧/后 N 帧/区间均匀抽帧）
+- **资产分类**：🎬 AI生成视频 / ✂ 剪辑视频 / 🖼 AI生成图片 / 🎞 抽帧图片 分类筛选 + 本地位置标注
+- **移动资源**：服务端文件夹浏览器，默认 `ai-learning/lzf`，真剪切
+- **提示词记录**：每次提交自动追加到 `data/prompts.jsonl`
+- **用量/余额查询**、能力页（模型能力对照表）、头像、标签页持久化
+- 任务自动轮询，生成视频自动下载本地（规避 URL 24 小时过期）
 
-## 素材输入能力
+## 模型
 
-| 素材 | 本地上传 | 说明 |
-|------|---------|------|
-| 图片 | ✅ | 自动转 base64，可多选；角色可选 首帧/尾帧/参考图 |
-| 音频 | ✅ | 自动转 base64（API 支持音频 base64） |
-| 视频 | ⚠ 有条件 | 方舟视频生成 API **只接受公网 URL，不支持 base64**。可「粘贴公网 URL」直接引用；或「上传本地视频」后需在 `config.json` 配置 `public_base_url`（公网隧道地址，如 ngrok/cloudflared），平台会拼出可访问地址供方舟拉取 |
-
-> 启隧道示例：`ngrok http 8000` 得到 `https://xxx.ngrok-free.app`，填入 `public_base_url` 后重启。生成期间保持隧道开启。
-
-## 提示词技巧
-
-素材可在提示词中引用：`@图片1` / `@视频1` / `@音频1`（按同类型素材的添加顺序编号）。
-例如：`首帧为 @图片1，参考 @视频1 的运镜，用 @音频1 作为背景音乐。`
-
-> 参考视频必须是公网可访问的 URL（本地文件无法被方舟服务器访问）。图片、音频支持本地上传（自动转 base64）。
-
-### 视频延长 / 编辑 快捷用法
-
-**视频延长（续写）**：添加参考视频 → 任务类型选「视频延长」→ 提示词写 延长 / 续写 / 延续。
-```
-向后延长 @视频1，@图片1 的角色从天而降，画面保持同一风格
-续写 @视频1 前 5 秒，保持构图与光影一致
-```
-
-**视频编辑**：添加参考视频 → 任务类型选「视频编辑」→ 提示词写 编辑 / 加上 / 删掉 / 替换。
-```
-@视频1 中加一些小动物，活跃画面
-把 @视频1 的人物替换为 @图片1
-删掉 @视频1 的背景音乐
-```
-
-**首尾帧**：添加两张图分别设为「首帧」「尾帧」。
-
-> 编辑 / 延长 / 首尾帧任务会自动锁定 `ratio=adaptive`、`duration=-1`（智能时长），页面里已内置这些示例词条，点击即可填入提示词。
+| 模型 | 能力 |
+|------|------|
+| Seedance 2.0 mini | 480/720p，4-15s，文本+图片（仅首帧），性价比 |
+| Seedance 2.0 fast | 480/720p，首尾帧+参考图 |
+| Seedance 2.0 | 最高 4k，参考视频/音频、编辑、延长、画面运动、双声道 |
+| Seedance 2.5 | 最高 1080p、30s/段、多轮延长、50 素材全模态 |
+| Seedream 5.0 pro | 最强画质；多图生图 2-10、图层拆分、交互编辑；不支持组图 |
+| Seedream 5.0 lite | 性价比；组图 ≤15 张、多图生图 2-14 |
 
 ## 目录结构
 
 ```
 video-studio/
-├── app.py           # FastAPI 后端（接口 + 后台轮询）
+├── app.py           # FastAPI 后端（接口 + 后台任务）
 ├── ark_client.py    # 火山方舟 API 封装
-├── config.py        # 配置加载
-├── config.json      # ★ 配置文件（在这里填 API Key）
+├── config.py        # 配置加载（config.json + config.secrets.json 合并）
+├── config.json      # 非敏感配置（入库）
+├── config.secrets.json # ★ 密钥（不入库，自行创建）
 ├── store.py         # 任务本地存储（JSON）
-├── run.sh           # 启动脚本
+├── run.sh           # 启动脚本（缺密钥则退出）
 ├── static/          # 前端页面
-│   ├── index.html
-│   ├── style.css
-│   └── app.js
 └── data/
-    ├── tasks.json   # 任务记录
-    ├── videos/      # 下载的视频
-    └── uploads/     # 上传的图片（任务缩略图）
+    ├── gen_videos/  # 🎬 AI 生成视频
+    ├── cut_videos/  # ✂ 剪辑视频
+    ├── gen_images/  # 🖼 AI 生成图片
+    ├── cut_frames/  # 🎞 抽帧图片
+    ├── refs/        # 上传的参考素材
+    ├── prompts.jsonl # 提示词提交记录
+    └── *.json       # 任务/批量/延长/图片任务记录
 ```
+
+## 官方文档入口
+
+- 文档中心：https://docs.volcengine.com/docs/ark/?lang=zh
+- 开通管理：https://console.volcengine.com/ark/region:cn-beijing/openManagement
+- 创建视频生成任务：https://docs.volcengine.com/docs/82379/1520757
+- 图片生成 API：https://docs.volcengine.com/docs/82379/1541523
+- Seedance 2.5 教程：https://docs.volcengine.com/docs/82379/2607688
 
 ## 说明
 
-- 视频 URL 有效期 24 小时，本平台会在任务成功后立即下载到本地，避免过期
-- 任务记录保存在 `data/tasks.json`，重启不丢失
-- Seedance 2.0 mini 并发数为 1，多任务会排队依次生成
-- 也支持用环境变量 `ARK_API_KEY` / `ARK_BASE_URL` 覆盖 config.json
+- 视频 URL 有效期 24 小时，任务成功后立即下载到本地
+- Seedance 2.0 mini 并发数为 1，多任务排队
+- 任务记录在 `data/*.json`，重启不丢
+- 关于 AI 协作会话历史，见仓库根 `OpencodeRecord.md`
