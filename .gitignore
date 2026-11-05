@@ -1,32 +1,46 @@
-# ===== 密钥与敏感配置（绝不提交） =====
-video-studio/config.secrets.json
+# ===== 输出（临时 + 成品，全部不进 git） =====
+out/
 
-# ===== 本地媒体/数据（大文件，不同步） =====
-video-studio/data/
-
-# ===== Python =====
-__pycache__/
+# ===== 构建/中间产物 =====
+**/build/
+**/.build/
+**/frames/
+**/stills/
+**/node_modules/
+**/.venv/
+**/venv/
+**/__pycache__/
 *.pyc
 *.pyo
-.venv/
-venv/
-
-# ===== opencode / 会话 =====
-opencode.sid
-opencode.list
-*.sid
 *.log
+
+# ===== 密钥与敏感配置 =====
+**/config.secrets.json
+**/*.env
+!**/*.env.example
+**/mimo.env
+
+# ===== video-studio 本地数据 =====
+tools/video-studio/data/
+tools/video-studio/*.bak.json
+tools/video-studio/config.example.json
+
+# ===== 上游仓库：保留源码，跳过重媒体 =====
+repos/**/*.mp4
+repos/**/*.mov
+repos/**/*.wav
+repos/**/*.m4a
+repos/**/*.gif
+
+# ===== 参考资料里的重媒体（要版本化请用 Git LFS） =====
+resources/references/**/*.mp4
+resources/references/**/*.mov
+resources/references/**/*.wav
+resources/references/**/*.m4a
 
 # ===== 系统 =====
 .DS_Store
 Thumbs.db
-# 本地备份文件（不同步）
-video-studio/*.bak.json
-
-# 配置文件（密钥/示例都不入库，克隆后自行创建）
-video-studio/config.example.json
-
-# 大视频文件（超过 GitHub 100MB 限制，不同步）
-*.mp4
-*.mov
-*.wav
+*.sid
+opencode.sid
+opencode.list
