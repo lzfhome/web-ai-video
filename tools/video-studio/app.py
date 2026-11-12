@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import ark_client
+import tts_client
 from config import CONFIG
 from store import TaskStore, ChainJobStore, ExtendJobStore, ImageJobStore, public_task
 import volc_usage
@@ -29,8 +30,9 @@ V_CUT_DIR = DATA_DIR / "cut_videos"
 UP_IMG_DIR = DATA_DIR / "gen_images"
 UP_FRAME_DIR = DATA_DIR / "cut_frames"
 UP_REF_DIR = DATA_DIR / "refs"
+TTS_DIR = DATA_DIR / "gen_audio"
 
-MOVE_BASE = Path("/home/oliver/workspace/AIWork/ai-learning")
+MOVE_BASE = Path(os.environ.get("VIDEO_STUDIO_MOVE_BASE") or (ROOT.parent.parent / "ai-learning")).expanduser().resolve()
 MOVE_ROOT = MOVE_BASE / "lzf"
 
 TASKS_FILE = DATA_DIR / "tasks.json"
@@ -194,12 +196,13 @@ def _video_path(name: str) -> Path | None:
 
 
 def _upload_path(name: str) -> Path | None:
-    p = UPLOAD_DIR / name
-    if p.exists():
+    base = UPLOAD_DIR.resolve()
+    p = (base / name).resolve()
+    if (p == base or base in p.parents) and p.is_file():
         return p
-    for base in (UP_IMG_DIR, UP_FRAME_DIR, UP_REF_DIR, UPLOAD_DIR / "images", UPLOAD_DIR / "frames", UPLOAD_DIR / "refs"):
-        q = base / Path(name).name
-        if q.exists():
+    for d in (UP_IMG_DIR, UP_FRAME_DIR, UP_REF_DIR, UPLOAD_DIR / "images", UPLOAD_DIR / "frames", UPLOAD_DIR / "refs"):
+        q = d / Path(name).name
+        if q.is_file():
             return q
     return None
 
@@ -1305,3 +1308,84 @@ async def video_file(filename: str):
     if not path:
         raise HTTPException(404, "视频不存在")
     return FileResponse(str(path), media_type="video/mp4")
+
+
+# ---------------- 配音（豆包语音 Seed-TTS 2.0） ----------------
+
+class TTSRequest(BaseModel):
+    text: str
+    voice: str = "zh_male_qingcang_uranus_bigtts"
+    speed: float = Field(1.0, ge=0.1, le=2.0)
+    emotion: str | None = None
+    sample_rate: int = 24000
+    format: str = "mp3"
+
+
+def _tts_list() -> list[dict]:
+    if not TTS_DIR.exists():
+        return []
+    items = []
+    for p in TTS_DIR.iterdir():
+        if p.suffix.lower() not in {".mp3", ".wav", ".ogg"}:
+            continue
+        st = p.stat()
+        items.append({
+            "filename": p.name,
+            "url": f"/api/tts/{p.name}",
+            "bytes": st.st_size,
+            "mtime": int(st.st_mtime),
+        })
+    items.sort(key=lambda x: x["mtime"], reverse=True)
+    return items
+
+
+@app.get("/api/tts/voices")
+async def tts_voices():
+    return {"voices": tts_client.voices()}
+
+
+@app.get("/api/tts/files")
+async def tts_files():
+    return {"files": _tts_list()[:40]}
+
+
+@app.post("/api/tts")
+async def tts_create(req: TTSRequest):
+    text = (req.text or "").strip()
+    if not text:
+        raise HTTPException(400, "文本不能为空")
+    if len(text) > 2000:
+        raise HTTPException(400, "一次最多 2000 字，长文请分段")
+    if req.format not in {"mp3", "wav", "ogg_opus"}:
+        raise HTTPException(400, "只支持 mp3 / wav / ogg_opus")
+    try:
+        data = await tts_client.synthesize(
+            text, req.voice, speed=req.speed, emotion=req.emotion,
+            sample_rate=req.sample_rate, fmt=req.format,
+        )
+    except Exception as e:  # noqa: BLE001 - 把上游错误原样带给前端
+        raise HTTPException(502, f"配音失败：{e}")
+
+    TTS_DIR.mkdir(parents=True, exist_ok=True)
+    ext = "ogg" if req.format == "ogg_opus" else req.format
+    tag = req.voice.split("_")[1] if req.voice.startswith("zh_") else "tts"
+    name = f"tts_{time.strftime('%Y%m%d_%H%M%S')}_{tag}_{os.urandom(2).hex()}.{ext}"
+    (TTS_DIR / name).write_bytes(data)
+    _log_prompt("tts", req.voice, text)
+    return {
+        "filename": name,
+        "url": f"/api/tts/{name}",
+        "bytes": len(data),
+        "voice": req.voice,
+        "text": text[:80],
+    }
+
+
+@app.get("/api/tts/{filename:path}")
+async def tts_file(filename: str):
+    name = Path(filename).name
+    path = TTS_DIR / name
+    if not path.exists() or not path.is_file():
+        raise HTTPException(404, "音频不存在")
+    media = {"mp3": "audio/mpeg", "wav": "audio/wav", "ogg": "audio/ogg"}.get(path.suffix.lstrip("."), "audio/mpeg")
+    return FileResponse(str(path), media_type=media)

@@ -1,0 +1,27 @@
+{
+  "file": "rainy-blue_fanwan.mp3",
+  "path": "D:\\AIWork\\resources\\music\\rainy-blue_fanwan.mp3",
+  "title": "Rainy Blue (蓝色阴雨)",
+  "artist": "饭碗的彼岸, 夜莺与玫瑰",
+  "album": "Rainy Dumplings",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=1341912654",
+  "source_id": "1341912654",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": "rainy-blue_fanwan.flac",
+  "acquired_at": "2026-11-12T04:01:12.575161+00:00",
+  "probe": {
+    "duration": 266.824958,
+    "size": 10675244,
+    "bit_rate": 320067,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

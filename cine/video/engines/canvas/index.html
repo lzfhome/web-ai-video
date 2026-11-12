@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Canvas 快速通道 · BGM-only</title>
+<style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script type="module">
+import {boot} from './engine.js';
+boot().catch((err) => {
+  window.__error = String(err && err.stack || err);
+  console.error(err);
+});
+</script>
+</body>
+</html>

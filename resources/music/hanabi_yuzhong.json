@@ -1,0 +1,27 @@
+{
+  "file": "hanabi_yuzhong.mp3",
+  "path": "D:\\AIWork\\resources\\music\\hanabi_yuzhong.mp3",
+  "title": "花火が瞬く夜に",
+  "artist": "羽肿",
+  "album": "花火が瞬く夜に",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=434902428",
+  "source_id": "434902428",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": "hanabi_yuzhong.flac",
+  "acquired_at": "2026-11-12T03:59:51.007648+00:00",
+  "probe": {
+    "duration": 270.857146,
+    "size": 10836524,
+    "bit_rate": 320066,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

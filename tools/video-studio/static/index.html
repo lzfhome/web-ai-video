@@ -1,16 +1,17 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>视频生成工作台</title>
-  <link rel="stylesheet" href="/static/style.css?v=4" />
+  <link rel="stylesheet" href="/static/style.css?v=5" />
 </head>
 <body>
   <header>
     <h1><span class="logo">▶</span>视频生成工作台</h1>
     <nav class="tabs">
       <button class="tab active" data-view="create">创作</button>
+      <button class="tab" data-view="voice">配音</button>
       <button class="tab" data-view="assets">资产</button>
       <button class="tab" data-view="usage">用量</button>
       <button class="tab" data-view="cap">能力</button>
@@ -202,6 +203,71 @@
     </div>
   </div>
 
+  <!-- ===== 配音 ===== -->
+  <div class="view" id="view-voice" hidden>
+    <div class="layout">
+      <div class="side">
+        <div class="section">
+          <h2>音色</h2>
+          <div class="settings-grid">
+            <div class="field full">
+              <label>音色（豆包语音合成 2.0）</label>
+              <select id="tts-voice"></select>
+            </div>
+            <div class="field">
+              <label>语速</label>
+              <input type="number" id="tts-speed" value="1" min="0.5" max="1.5" step="0.05"
+                     data-tip="0.1–2.0。旁白建议 0.85–0.95，比默认慢一点更像讲述。" />
+            </div>
+            <div class="field">
+              <label>采样率</label>
+              <select id="tts-rate">
+                <option value="24000" selected>24000</option>
+                <option value="16000">16000</option>
+                <option value="8000">8000</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label>情感（可选）</label>
+              <input id="tts-emotion" placeholder="happy / sad / angry…，留空=默认"
+                     data-tip="只有部分音色支持情感。填英文情绪名，留空走音色默认语气。" />
+            </div>
+          </div>
+          <div class="hint-box">
+            API Key 读自 <code>~/.config/aiwork/tts.env</code> 的 <code>DOUBAO_TTS_API_KEY</code>，
+            和方舟的 <code>ark-</code> key 不通用。
+          </div>
+        </div>
+        <div class="section">
+          <h2>脚本用法</h2>
+          <div class="hint-box" style="line-height:1.9;">
+            产线配音：<br />
+            <code>python -m cine.audio.doubao_tts --text "…" --voice zh_male_qingcang_uranus_bigtts --out a.mp3</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="main" style="padding:22px 20px 40px;">
+        <div class="prompt-panel" style="height:auto;">
+          <h2 class="hero-title">输入文字，生成配音</h2>
+          <textarea id="tts-text" class="hero-input" style="min-height:150px;"
+            placeholder="把旁白或台词贴进来…
+· 一句话一条最自然，长段会自动按标点断句
+· 中文标点会影响停顿，建议保留"></textarea>
+          <div class="chat-tools" style="justify-content:center;margin-top:14px;">
+            <button id="tts-demo" class="pill-btn">示例：天地不仁</button>
+            <button id="tts-generate" class="pill-btn primary">🔊 生成配音</button>
+          </div>
+        </div>
+        <div class="main-head" style="margin-top:22px;">
+          <h2>最近配音 <span class="sub" id="tts-count"></span></h2>
+          <button id="tts-refresh">刷新</button>
+        </div>
+        <div id="tts-list"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== 资产 ===== -->
   <div class="view" id="view-assets" hidden>
     <div class="main">
@@ -326,6 +392,6 @@
     </div>
   </div>
 
-  <script src="/static/app.js?v=4"></script>
+  <script src="/static/app.js?v=5"></script>
 </body>
 </html>

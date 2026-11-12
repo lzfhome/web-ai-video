@@ -10,10 +10,12 @@
 
 # 2. 启动（缺失密钥文件会打印指引并退出）
 ./run.sh
-# 或：uvicorn app:app --host 0.0.0.0 --port 8000
+# 或：python -m uvicorn app:app --host 127.0.0.1 --port 8000
 ```
 
 打开浏览器访问 http://localhost:8000
+
+默认只绑 `127.0.0.1`；需要局域网访问时设 `VIDEO_STUDIO_HOST=0.0.0.0`（API 能触发付费生成，建议加防火墙/反向代理鉴权）。端口用 `VIDEO_STUDIO_PORT` 覆盖。
 
 ## 密钥配置（config.secrets.json）
 
@@ -26,13 +28,16 @@
   "public_base_url": "",
   "access_key_id": "你的AK",
   "secret_access_key": "你的SK",
-  "usage_apikey_id": "你的用量APIKeyID"
+  "usage_apikey_id": "你的用量APIKeyID",
+  "tts_api_key": "豆包语音的APIKey（UUID 形态）"
 }
 ```
 
 - API Key 获取：https://console.volcengine.com/ark/region:cn-beijing/apikey
 - 模型开通：https://console.volcengine.com/ark/region:cn-beijing/openManagement
 - 也支持环境变量 `ARK_API_KEY` / `ARK_BASE_URL` 覆盖
+- `tts_api_key` 是**豆包语音**的 key（UUID，不是 `ark-`），在控制台「开通管理 → 模型 → TTS」开通后创建；
+  也可以写到 `~/.config/aiwork/tts.env` 的 `DOUBAO_TTS_API_KEY`，两个地方读的是同一把
 
 ## config.json（非敏感配置，入库）
 
@@ -55,6 +60,7 @@
 - **长片延长**：参考视频续写，多轮延长直到目标时长（自动 `ratio=adaptive + duration=-1`）
 - **图片生成**：Seedream 文生图/图生图/组图；后台异步任务，资产页看进度；多图参考数量限制（pro 2-10 / lite 2-14）；尺寸支持 2K/4K 命名值
 - **ffmpeg 剪辑**：视频截取片段（开头/结尾+秒数）；抽帧（前 N 帧/后 N 帧/区间均匀抽帧）
+- **配音**：豆包语音合成 2.0，选音色/语速/情感，生成 mp3 可直接试听下载；文件在 `data/gen_audio/`
 - **资产分类**：🎬 AI生成视频 / ✂ 剪辑视频 / 🖼 AI生成图片 / 🎞 抽帧图片 分类筛选 + 本地位置标注
 - **移动资源**：服务端文件夹浏览器，默认 `ai-learning/lzf`，真剪切
 - **提示词记录**：每次提交自动追加到 `data/prompts.jsonl`
@@ -72,6 +78,13 @@
 | Seedream 5.0 pro | 最强画质；多图生图 2-10、图层拆分、交互编辑；不支持组图 |
 | Seedream 5.0 lite | 性价比；组图 ≤15 张、多图生图 2-14 |
 
+## 配音
+
+- `GET /api/tts/voices` 常用音色；`POST /api/tts` 合成（`{text, voice, speed, sample_rate, format}`）
+- `GET /api/tts/files` 最近 40 条；`GET /api/tts/{filename}` 播放/下载
+- 生成文件落在 `data/gen_audio/`，同时记一条 `prompts.jsonl`
+- 请求实现复用 `cine/audio/clients/doubao_tts.py`，参数只在那一处维护
+
 ## 目录结构
 
 ```
@@ -88,6 +101,7 @@ video-studio/
     ├── gen_videos/  # 🎬 AI 生成视频
     ├── cut_videos/  # ✂ 剪辑视频
     ├── gen_images/  # 🖼 AI 生成图片
+    ├── gen_audio/   # 🔊 配音 mp3
     ├── cut_frames/  # 🎞 抽帧图片
     ├── refs/        # 上传的参考素材
     ├── prompts.jsonl # 提示词提交记录

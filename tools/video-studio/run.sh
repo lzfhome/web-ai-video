@@ -24,4 +24,7 @@ if [ ! -f config.secrets.json ]; then
   exit 1
 fi
 
-exec uvicorn app:app --host 0.0.0.0 --port 8000
+HOST="${VIDEO_STUDIO_HOST:-127.0.0.1}"
+PORT="${VIDEO_STUDIO_PORT:-8000}"
+PY="${PYTHON:-python}"
+exec "$PY" -m uvicorn app:app --host "$HOST" --port "$PORT"

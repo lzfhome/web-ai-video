@@ -1,0 +1,110 @@
+[
+  {
+    "file": "dust-fireflies_yijiu.mp3",
+    "path": "D:\\AIWork\\resources\\music\\dust-fireflies_yijiu.mp3",
+    "title": "尘埃与流萤",
+    "artist": "依旧在雨中等你, 鹤见江野",
+    "album": "尘与萤",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=1426611455",
+    "source_id": "1426611455",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": "dust-fireflies_yijiu.flac",
+    "acquired_at": "2026-11-12T04:01:57.578475+00:00",
+    "probe": {
+      "duration": 273.466354,
+      "size": 10941164,
+      "bit_rate": 320073,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "hanabi_yuzhong.mp3",
+    "path": "D:\\AIWork\\resources\\music\\hanabi_yuzhong.mp3",
+    "title": "花火が瞬く夜に",
+    "artist": "羽肿",
+    "album": "花火が瞬く夜に",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=434902428",
+    "source_id": "434902428",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": "hanabi_yuzhong.flac",
+    "acquired_at": "2026-11-12T03:59:51.007648+00:00",
+    "probe": {
+      "duration": 270.857146,
+      "size": 10836524,
+      "bit_rate": 320066,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "rainy-blue_fanwan.mp3",
+    "path": "D:\\AIWork\\resources\\music\\rainy-blue_fanwan.mp3",
+    "title": "Rainy Blue (蓝色阴雨)",
+    "artist": "饭碗的彼岸, 夜莺与玫瑰",
+    "album": "Rainy Dumplings",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=1341912654",
+    "source_id": "1341912654",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": "rainy-blue_fanwan.flac",
+    "acquired_at": "2026-11-12T04:01:12.575161+00:00",
+    "probe": {
+      "duration": 266.824958,
+      "size": 10675244,
+      "bit_rate": 320067,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "summer-nostalgia_moreanp.mp3",
+    "path": "D:\\AIWork\\resources\\music\\summer-nostalgia_moreanp.mp3",
+    "title": "忆夏思乡",
+    "artist": "MoreanP",
+    "album": "忆夏思乡",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=506650377",
+    "source_id": "506650377",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": "summer-nostalgia_moreanp.flac",
+    "acquired_at": "2026-11-12T04:02:49.859469+00:00",
+    "probe": {
+      "duration": 263.379354,
+      "size": 10537964,
+      "bit_rate": 320084,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  }
+]

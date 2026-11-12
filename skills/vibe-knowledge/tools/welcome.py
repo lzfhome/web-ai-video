@@ -4,11 +4,16 @@
       python3 welcome.py --force    # 不管有没有介绍过，都重新生成并打开（风格库更新后用）
       python3 welcome.py --no-open  # 只生成不打开
 输出：~/Desktop/vibe-knowledge/风格图鉴/index.html（风格图、快闪片、样片拷到同目录，相对路径引用，整个文件夹可以直接发给别人）。"""
-import html, json, re, shutil, subprocess, sys
+import html, json, re, shutil, subprocess, sys, webbrowser
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(errors="replace")
+    sys.stderr.reconfigure(errors="replace")
+
 SK = Path(__file__).resolve().parents[1]
-CAT = json.loads((SK / "styles/catalog.json").read_text(encoding="utf-8"))
+STYLES = Path(__file__).resolve().parents[3] / "resources/styles"
+CAT = json.loads((STYLES / "catalog.json").read_text(encoding="utf-8"))
 MARK = Path.home() / ".vibe-knowledge/welcomed"
 OUT = Path.home() / "Desktop/vibe-knowledge/风格图鉴"
 VID = Path.home() / "Desktop/Vibe知识大赏_视频"
@@ -28,8 +33,8 @@ def main():
     (OUT / "img").mkdir(parents=True, exist_ok=True); (OUT / "video").mkdir(exist_ok=True)
     cards, fams = {}, CAT.get("families") or sorted({x.get("fam", x["cat"]) for x in CAT["styles"]})
     for s in CAT["styles"]:
-        md = (SK / "styles" / s["key"] / "STYLE.md").read_text(encoding="utf-8")
-        shutil.copy(SK / "styles" / s["key"] / "still.jpg", OUT / "img" / f"{s['key']}.jpg")
+        md = (STYLES / s["key"] / "STYLE.md").read_text(encoding="utf-8")
+        shutil.copy(STYLES / s["key"] / "still.jpg", OUT / "img" / f"{s['key']}.jpg")
         tpl = "、".join(f"{t} {CAT['templates'][t].split('（')[0]}" for t in s["templates"])
         tier = '<span class="tier">增强档 · 需生图</span>' if s.get("tier") == "增强" else ""
         cards.setdefault(s.get("fam", s["cat"]), []).append(f"""<article class="card"><img src="img/{s['key']}.jpg" alt="{html.escape(s['name'])} 风格图" loading="lazy">
@@ -79,7 +84,7 @@ figcaption{{color:var(--dim);font-size:14px;margin-top:6px}}
     MARK.parent.mkdir(parents=True, exist_ok=True); MARK.write_text("1", encoding="utf-8")
     print(f"→ {OUT / 'index.html'}（{sum(len(v) for v in cards.values())} 套风格 / {len(cards)} 个家族，{len(vids)} 支视频）")
     if "--no-open" not in sys.argv:
-        subprocess.run(["open", str(OUT / "index.html")], check=False)
+        webbrowser.open((OUT / "index.html").as_uri())
 
 
 if __name__ == "__main__":

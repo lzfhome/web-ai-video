@@ -8,15 +8,15 @@ Claude 拿到结果后用 AskUserQuestion 问用户：推荐第一的排第一�
 import json, sys
 from pathlib import Path
 
-SK = Path(__file__).resolve().parents[1]
-CAT = json.loads((SK / "styles/catalog.json").read_text(encoding="utf-8"))
+STYLES = Path(__file__).resolve().parents[3] / "resources/styles"
+CAT = json.loads((STYLES / "catalog.json").read_text(encoding="utf-8"))
 MINE = Path.home() / "vibe-knowledge-styles"
 
 
 def load_styles():
     out = []
     for s in CAT["styles"]:
-        out.append({**s, "still": str(SK / "styles" / s["key"] / "still.jpg"), "mine": False})
+        out.append({**s, "still": str(STYLES / s["key"] / "still.jpg"), "mine": False})
     if MINE.exists():
         for d in sorted(MINE.iterdir()):
             f = d / "style.json"

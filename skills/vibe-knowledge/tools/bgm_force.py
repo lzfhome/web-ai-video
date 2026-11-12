@@ -14,8 +14,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-SK = Path(__file__).resolve().parents[1]
-BGM_SRC = SK / "assets/music/vibe-bgm.m4a"
+AIWORK = Path(__file__).resolve().parents[3]
+SK = AIWORK / "skills/vibe-knowledge"
+BGM_SRC = AIWORK / "resources/music/vibe-bgm.m4a"
 VOICE_GAP = 10.0        # 说话时 BGM 比人声低多少 dB。用户要求「音量高一点」（10-28）：14 → 10；8 以下开始抢人声，12 以上偏轻
 LONG = 20.0             # 超过这个时长的非 BGM 音乐条目视为整段配乐，停用
 
@@ -30,7 +31,17 @@ def is_user_bgm(m):
     return bool(m.get("bgm")) and bool(str(m.get("user_request", "")).strip())
 
 
-def prepare(info, total, B, py=sys.executable):
+def _src_exists(m, root=None):
+    src = str(m.get("src", ""))
+    if not src or src.startswith(("earshot:", "http://", "https://")):
+        return True
+    p = Path(src)
+    if not p.is_absolute() and root:
+        p = Path(root) / src
+    return p.exists()
+
+
+def prepare(info, total, B, py=sys.executable, root=None):
     music = info.get("music", [])
     keep, dropped = [], []
     user = [m for m in music if is_user_bgm(m)]
@@ -43,7 +54,10 @@ def prepare(info, total, B, py=sys.executable):
             print("  BGM 强制：有条目标了 bgm: true 但没写 user_request（用户原话），不认，照常用 vibe-bgm")
             dropped.append(Path(str(m.get("src"))).name)
         elif is_bgm(m):
-            m["_bgm"] = True; keep.append(m)
+            if _src_exists(m, root):
+                m["_bgm"] = True; keep.append(m)
+            else:
+                dropped.append(Path(str(m.get("src", ""))).name)
         elif float(m.get("dur", 0)) >= LONG and not str(m.get("src", "")).startswith("earshot:"):
             dropped.append(Path(str(m.get("src"))).name)
         else:
@@ -53,7 +67,7 @@ def prepare(info, total, B, py=sys.executable):
         out = Path(B) / "bgm_auto.wav"
         subprocess.run([py, str(SK / "tools/fit_bgm.py"), str(out), "--seconds", f"{total:.3f}"], check=True,
                        stdout=subprocess.DEVNULL)
-        keep.insert(0, {"src": str(out), "from": 0, "at": 0, "dur": total, "gain": 0, "fade_in": 0.3, "fade_out": 1.8, "_bgm": True})
+        keep.insert(0, {"src": str(out.resolve()), "from": 0, "at": 0, "dur": total, "gain": 0, "fade_in": 0.3, "fade_out": 1.8, "_bgm": True})
         auto = True
     if user:
         print(f"  BGM：用户要求更换 → {Path(str(user[0].get('src'))).name}（{user[0].get('user_request')}）")

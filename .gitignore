@@ -1,5 +1,5 @@
-# ===== 输出（临时 + 成品，全部不进 git） =====
-out/
+# ===== 作品产物（源码 + build + deliveries，全部不进 git） =====
+workspaces/vibe-knowledge/projects/
 
 # ===== 构建/中间产物 =====
 **/build/
@@ -37,6 +37,17 @@ resources/references/**/*.mp4
 resources/references/**/*.mov
 resources/references/**/*.wav
 resources/references/**/*.m4a
+
+# ===== 大体积音乐源文件（FLAC 只留本地；入库只留 MP3） =====
+resources/music/**/*.flac
+resources/music/_incoming/
+
+# ===== 队列锁 / 引擎临时输出 =====
+**/.queue.lock
+cine/audio/generated/
+
+# 本会话下载的 Node/ffmpeg/benchmark 工具链，放仓库内但不入库
+tools/local/
 
 # ===== 系统 =====
 .DS_Store

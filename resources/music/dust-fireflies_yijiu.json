@@ -1,0 +1,27 @@
+{
+  "file": "dust-fireflies_yijiu.mp3",
+  "path": "D:\\AIWork\\resources\\music\\dust-fireflies_yijiu.mp3",
+  "title": "尘埃与流萤",
+  "artist": "依旧在雨中等你, 鹤见江野",
+  "album": "尘与萤",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=1426611455",
+  "source_id": "1426611455",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": "dust-fireflies_yijiu.flac",
+  "acquired_at": "2026-11-12T04:01:57.578475+00:00",
+  "probe": {
+    "duration": 273.466354,
+    "size": 10941164,
+    "bit_rate": 320073,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

@@ -8,7 +8,7 @@
 做的事：
 1. 工作区 / 系列不存在就调用 ai-teardown 的 new_series.py --style cine 建好（引擎、字体、渲染工具）。
 2. 把 kit/know.js 装进 <系列>/cine/engine/，给 cine/tools/record.py、stills.py 打补丁：每次 seek 之后 await window.__vk.wait()（等配图、视频帧解码完再截图）。
-3. 克隆音色参照拷到 <系列>/voice/host-ref.wav（默认 assets/voice/default-voice-ref.wav：MiMo 音色设计生成的 AI 声音，不是真人）。
+3. 克隆音色参照拷到 <系列>/voice/host-ref.wav（默认 resources/voice/default-voice-ref.wav：MiMo 音色设计生成的 AI 声音，不是真人）。
 4. lessons/<期号>/：narration.json（母版旁白骨架）、film.js（画面骨架）、facts.md（事实清单）、assets.json（Renoise 资产清单）、assets/{img,clips,audio}/。
 """
 import argparse
@@ -21,7 +21,7 @@ from pathlib import Path
 
 SKILL = Path(__file__).resolve().parents[1]
 AT = Path(__file__).resolve().parents[2] / "ai-teardown"
-DEFAULT_REF = Path(os.environ.get("VK_VOICE_REF") or Path(__file__).resolve().parents[1] / "assets/voice/default-voice-ref.wav")   # 默认：AI 设计的「科技博主沉稳男声」；想用自己的克隆音色就传 --voice-ref 或设 VK_VOICE_REF
+DEFAULT_REF = Path(os.environ.get("VK_VOICE_REF") or Path(__file__).resolve().parents[3] / "resources/voice/default-voice-ref.wav")   # 默认：AI 设计的「科技博主沉稳男声」；想用自己的克隆音色就传 --voice-ref 或设 VK_VOICE_REF
 
 SEEK = 'pg.evaluate("(t) => window.__film.seek(t)", t)'
 PATCHED = SEEK + '; pg.evaluate("() => window.__vk ? window.__vk.wait() : null")'

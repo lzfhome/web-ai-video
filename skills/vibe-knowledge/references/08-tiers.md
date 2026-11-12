@@ -10,7 +10,7 @@
 | 旁白 | 小米 MiMo 克隆音色（用户本人，voice/host-ref.wav）+ voice_post.py 人声后期 |
 | 画面主体 | **Opus 直接写 SVG 插画**（扁平矢量人物 / 建筑 / 器物 / 地图轮廓），用 `layers` 分远中近三层做视差推移；cine 的粒子、3D 镜头、着色器（Particles、Tunnel、Liquid…）做抽象概念 |
 | 数据与信息 | know.js：counter、bars、spread、trail、vquote、keyword、chapter、foot |
-| 配乐 | **默认：skill 自带 vibe-bgm**（`tools/fit_bgm.py <out.wav> --lesson <期目录>` 按片长按小节裁剪，两档通用）；需要换曲时才用 promo-video 曲库（`python3.12 ~/.claude/skills/promo-video/scripts/pick_music.py <out.wav> --mood … --seconds … --hit-at <片名秒>`，需要 numpy，用 python3.12 跑）；或 cine 的 bed.py 按 sections 合成 |
+| 配乐 | **默认：resources 里的 vibe-bgm**（`skills/vibe-knowledge/tools/fit_bgm.py <out.wav> --lesson <期目录>` 按片长按小节裁剪，两档通用）；需要换曲时才用 promo-video 曲库（`python3.12 ~/.claude/skills/promo-video/scripts/pick_music.py <out.wav> --mood … --seconds … --hit-at <片名秒>`，需要 numpy，用 python3.12 跑）；或 `cine/audio/tools/bed.py` 按 sections 合成 |
 | 音效 | cine 内置（slam whoosh riser impact chime tick shutter card …，写进 sfx） |
 | 素材 | 公有领域 / CC 素材（Wikimedia Commons 古画、古籍书影、NASA 图）可以用，署名写进片尾和 facts.md；不用来路不明的图 |
 

@@ -7,8 +7,8 @@
 默认读取：
 
 ```
-/home/oliver/workspace/AIWork/tools/video-studio/config.secrets.json
-/home/oliver/workspace/AIWork/tools/video-studio/config.json
+<AIWork>/tools/video-studio/config.secrets.json
+<AIWork>/tools/video-studio/config.json
 ```
 
 - 密钥只放 `config.secrets.json`（或环境变量 `ARK_API_KEY` / `ARK_BASE_URL`），**不要写进项目**。

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""把知识大赏默认 BGM（assets/music/vibe-bgm.m4a）裁成任意片长，切点都在小节线上。
+"""把知识大赏默认 BGM（resources/music/vibe-bgm.m4a）裁成任意片长，切点都在小节线上。
 用法：$CINE_PY fit_bgm.py <输出.wav> --seconds 95          # 指定总长（一般 = 旁白总长 + 尾卡 TAIL）
       $CINE_PY fit_bgm.py <输出.wav> --lesson <期目录>      # 读 build/timings.json 的 total，再加 --tail（默认 3 秒）
       可选 --src 别的曲子（同目录下要有同名 .json 节拍数据）、--xfade 0.08
@@ -12,12 +12,16 @@ import json, subprocess, sys
 from pathlib import Path
 import numpy as np
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(errors="replace")
+    sys.stderr.reconfigure(errors="replace")
+
 SR = 48000
-SK = Path(__file__).resolve().parents[1]
+AIWORK = Path(__file__).resolve().parents[3]
 args = sys.argv[1:]
 opt = lambda k, d=None: args[args.index(k) + 1] if k in args else d
 out = Path(args[0])
-src = Path(opt("--src", SK / "assets/music/vibe-bgm.m4a"))
+src = Path(opt("--src", AIWORK / "resources/music/vibe-bgm.m4a"))
 meta = json.loads(src.with_suffix(".json").read_text(encoding="utf-8"))
 if "--lesson" in args:
     L = json.loads((Path(opt("--lesson")) / "build/timings.json").read_text(encoding="utf-8"))["total"] + float(opt("--tail", 3))

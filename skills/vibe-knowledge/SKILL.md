@@ -8,7 +8,7 @@ description: 「Vibe知识大赏」精品知识短片工作室：一个知识点
 > AIWork 中 Skill 根目录是 `AIWork/skills`；本文档里的 `~/.claude/skills` 请一律替换为 `AIWork/skills`。
 
 一期 = 一个知识点 → 一条有旁白的精品短片（默认 16:9 1080p60）。**时长由用户定**：先按复杂度给四档建议（速览 / 精讲 / 标准 / 深挖），每档写清能讲多细、要砍什么（references/13-duration.md）。
-引擎复用 ai-teardown 的 **cine**（旁白驱动的 `seek(t)` 代码成片），本 skill 加四样东西：**6 种脚本母版**（讲法）、**风格库**（长相 + 讲法，`styles/`，44 套 · 8 个家族已验证（每个家族至少 3 套） + 用户自己的风格）、**知识片组件库 know.js**、**增强层**（Renoise，或本地 Ark Seedance/Seedream；见 references/15）。
+引擎复用 AIWork 的 **cine**（旁白驱动的 `seek(t)` 代码成片），本 skill 加四样东西：**6 种脚本母版**（讲法）、**风格库**（长相 + 讲法，`resources/styles/`，44 套 · 8 个家族已验证（每个家族至少 3 套） + 用户自己的风格）、**知识片组件库 know.js**、**增强层**（Renoise，或本地 Ark Seedance/Seedream；见 references/15）。
 
 一期 = **母版 × 风格 × 手法（≤2）× 档位**。风格分 8 个家族：东方、暗场概念、明亮流行、印刷与纸、图解与设计、剪辑与纪实、电影感、游戏；其中敦煌壁画、青花、木刻、半调拼贴、长卷、铜版博物是增强档风格（每段约 2 张生图）。风格可以用库里的、改成自己的、或从空白做（references/09-style-studio.md）。
 
@@ -21,7 +21,7 @@ description: 「Vibe知识大赏」精品知识短片工作室：一个知识点
 
 **每条视频都必须有这首 BGM，音量统一**（用户规定）。**唯一例外：用户在对话里明确要求换曲**——那条音乐写 `bgm: true, user_request: "用户原话"`，它就当 BGM，vibe-bgm 让位，音量照样校准；没写原话的一律不认。强制在混音环节完成：finish.py 打了 `bgm_force.py` 钩子——film.js 没放 BGM 就自动按片长补上；其他 ≥20 秒的整段配乐（Lyria、曲库）一律停用；BGM 音量不看 film.js 写的 gain，统一校准到「说话时比人声低 10 dB」（用户要求音量高一点；停顿处自动抬起约 2–4 dB），gain_curve 只保留起伏形状。qa.py 会检测成片里有没有这首 BGM，没有就报 ⚠⚠，不能交付。
 
-所有知识大赏默认用同一首 BGM：`assets/music/vibe-bgm.m4a`（用户指定，112.9 BPM，160 秒，节拍网格在同名 .json）。配音定稿后一条命令按片长裁好，切点都在小节线上，开头照原曲、结尾接原曲的自然淡出，片子更长时按 8 小节循环：
+所有知识大赏默认用同一首 BGM：`resources/music/vibe-bgm.m4a`（用户指定，112.9 BPM，160 秒，节拍网格在同名 .json）。配音定稿后一条命令按片长裁好，切点都在小节线上，开头照原曲、结尾接原曲的自然淡出，片子更长时按 8 小节循环：
 
 ```bash
 $CINE_PY skills/vibe-knowledge/tools/fit_bgm.py $L/assets/audio/bgm.wav --lesson $L --tail 3   # 总长 = 旁白 + 尾卡
@@ -35,7 +35,7 @@ film.js 里：`music.push({ src: P("audio/bgm.wav"), from: 0, at: 0, dur: END + 
 
 - **首次使用**（`~/.vibe-knowledge/welcomed` 不存在）：先跑 `python3 skills/vibe-knowledge/tools/welcome.py`，生成并打开本地「风格图鉴」（`~/Desktop/vibe-knowledge/风格图鉴/index.html`：风格快闪片、样片集、按家族分组的风格卡、三种开口方式、两档、流程），然后在对话里用 5–6 句话介绍：母版 × 风格 × 档位、8 个家族各举一两套、三种开口方式，最后问「想先做哪个选题？」。风格库更新后用 `--force` 重新生成。
 - **用户给了选题**：先跑 `python3 skills/vibe-knowledge/tools/recommend.py "<选题>"`，拿到 3 套推荐后用 AskUserQuestion 问（推荐第一的排第一、标「（推荐）」、description 写理由和搭配母版；preview 写一句画面描述和风格图路径），同时用 SendUserFile 把 3 张风格图发给用户对照。用户点名了风格就跳过推荐。推荐到增强档风格时，在选项 description 里写明「需生图，约 8 积分/段」。
-- 风格目录的唯一来源是 `styles/catalog.json`（推荐、图鉴、快闪片都读它）；加新风格时同步 catalog.json、STYLE.md、still.jpg。
+- 风格目录的唯一来源是 `resources/styles/catalog.json`（推荐、图鉴、快闪片都读它）；加新风格时同步 catalog.json、STYLE.md、still.jpg。
 
 ## 核心主张（不能丢）
 
@@ -48,7 +48,24 @@ film.js 里：`music.push({ src: P("audio/bgm.wav"), from: 0, at: 0, dur: END + 
 
 ## 工作区
 
-> 在 AIWork 持久工作空间里，优先用 `workspaces/vibe-knowledge/tools/new_project.py`（作品优先：源码在 `projects/<slug>/`，成品在 `out/`）。下面的 `new_film.py` / `~/Desktop/vibe-knowledge` 只用于独立环境。
+> 在 AIWork 持久工作空间里，用根目录 `python project.py` 管所有项目（源码 + build + 成品都在 `workspaces/vibe-knowledge/projects/<slug>/`）。**line 就是模板**，新建项目直接复制对应产线的 skeleton。下面的 `new_film.py` / `~/Desktop/vibe-knowledge` 只用于独立环境。
+
+AIWork 里的最短路径：
+
+```bash
+python project.py list
+python project.py lines vibe-knowledge
+# 复制 line/canvas-bgm/film.canvas.skeleton.js -> lessons/<期号>/film.canvas.js
+python project.py render <期号>          # 自动读 project.json 的 line
+python project.py render <期号> --line canvas-bgm --fps 30   # BGM-only 快速通道
+python project.py render <期号> --line dom-narrated --workers 4
+python project.py deliver <期号> --title "本福特定律" --poster 12
+python project.py qa <期号>
+```
+
+底层脚本（`cine/video/dom/record.py` / `line/dom-narrated/finish.py` / `cine/video/deliver.py`）仍可直接调用，用于特殊参数和调试。
+
+独立环境（旧）：
 
 ```bash
 python3 skills/vibe-knowledge/tools/new_film.py <期号> --template A --title "本福特定律"
@@ -68,10 +85,10 @@ S=~/Desktop/vibe-knowledge/examples/vk; L=$S/lessons/<期号>
 | ③ 写 | 按母版骨架写旁白（字数上限见骨架 `_guide`）→ 子 agent 对抗审查（钩子、出处、字数）→ 改 | `narration.json` |
 | ④ 分镜 / 资产单 | 每拍画面分镜（标明哪些镜头代码做、哪些增强）；增强档写 assets.json；Renoise 用 estimate_cost，本地 Ark 先 dry-run；基础档选曲 | `assets.json` |
 | **确认 2** | 用户看旁白稿 + 分镜（+ 增强镜头清单和报价），明确同意后才生成 | |
-| ⑤ 生成 | 增强档：Renoise 先图 + 音效 → 用户挑图 → 视频（首帧用选中的图）→ 下载、改名、clip2frames；或本地 Ark：Seedream 图 / Seedance 视频（`tools/ark_media.py`，`--frames` 自动拆帧）。基础档跳过 | `assets/` |
-| ⑥ 配音 + 配乐 | 先出 15–20 秒开场试听让用户定音色和语速 → `tts_mimo.py --gap 0.2` → `speed.py` → `check_timings.py` → `voice_post.py` → `fit_bgm.py` 按片长裁默认 BGM | `build/timings.json`、`assets/audio/bgm.wav` |
-| ⑦ 编 | film.js（know.js 组件）→ stills.py 接触表逐张看（含动画中途帧） | `stills/` |
-| ⑧ 渲 | queue.sh（record → finish → deliver） | 成片 |
+| ⑤ 生成 | 增强档：Renoise 先图 + 音效 → 用户挑图 → 视频（首帧用选中的图）→ 下载、改名、clip2frames；或本地 Ark：Seedream 图 / Seedance 视频（`cine/image/ark.py`，`--frames` 自动拆帧）。基础档跳过 | `assets/` |
+| ⑥ 配音 + 配乐 | 先出 15–20 秒开场试听让用户定音色和语速 → `tts_mimo.py --gap 0.2` → `speed.py` → `cine/audio/tools/check_timings.py` → `voice_post.py` → `fit_bgm.py` 按片长裁默认 BGM | `build/timings.json`、`assets/audio/bgm.wav` |
+| ⑦ 编 | film.js（know.js 组件）→ `cine/video/dom/stills.py` 接触表逐张看（含动画中途帧） | `stills/` |
+| ⑧ 渲 | `project.py render` / `cine/video/queue.py`（record → finish → deliver；自动起服务器、带 lock） | 成片 |
 | ⑨ 质检 | `qa.py` 接触表 + OCR 回读对照 facts.md + 响度；接触表里整段画面不变 = 录制出事，重录 | `qa/` |
 | **确认 3** | 用户看成片；改完出发布包，封面用 `cover_first.py` 接成开头帧 | `post.txt`、封面 |
 
@@ -81,13 +98,14 @@ S=~/Desktop/vibe-knowledge/examples/vk; L=$S/lessons/<期号>
 cd ~/Desktop/vibe-knowledge; S=examples/vk; L=$S/lessons/<期号>
 python3 scripts/tts_mimo.py $L/narration.json $L/build --gap 0.2 --lead 0.3 --qa --jobs 2 > $L/voice.log 2>&1   # 配音 + 逐字对齐 + 回读（拍间只留 0.2 秒，别用 make_lesson 默认的 0.8）
 python3 scripts/speed.py $L 1.1                                        # 需要时整体提速，目标 5.5–6 字/秒
-(cd $S && python3 tools/check_timings.py <期号>)                       # 对齐有没有断
+(cd $S && python3 ../../../cine/audio/tools/check_timings.py <期号>)    # 对齐有没有断
 python3 skills/vibe-knowledge/tools/voice_post.py $L         # 人声后期（克隆音色定稿那条 EQ + 压缩）
 python3 skills/vibe-knowledge/tools/clip2frames.py $L/assets/clips/v01.mp4 $L/assets/clips/v01   # 视频拆帧 → 打印帧数
-cd $S && $CINE_PY cine/tools/stills.py <期号> lessons/<期号>/stills/sheet.png 1 B01+1 B02.title B05.count+0.5 …
-echo "<期号>|<片名>|<封面秒>" >> cine/queue.txt   # 只能追加！queue.txt 多会话共用
-pgrep -f cine/tools/queue.sh || CINE_PY=$CINE_PY cine/tools/queue.sh   # 已有队列在跑就别再起第二个，否则两路录制写坏同一个 picture.mp4
-python3 skills/vibe-knowledge/tools/qa.py lessons/<期号>/build/lesson<期号>.mp4
+cd $S && $CINE_PY ../../../cine/video/dom/stills.py <期号> lessons/<期号>/stills/sheet.png 1 B01+1 B02.title B05.count+0.5 …
+echo "<期号>|<片名>|<封面秒>" >> queue.txt
+python cine/video/queue.py <项目名> --workers 4
+python project.py deliver <期号> --title "<片名>" --poster 12
+python3 skills/vibe-knowledge/tools/qa.py <项目>/lessons/<期号>/build/lesson<期号>.mp4
 python3 skills/vibe-knowledge/tools/cover_first.py <成片.mp4> cover_16x9.jpg <交付.mp4>   # 封面接成开头帧（0.5 秒），每期交付必做
 ```
 
@@ -106,7 +124,7 @@ voice.log 里回读 <95% 的拍删掉 `build/audio/<拍>.*` 重配；专名用 l
 | references/06-benchmarks.md | 对标作品数据与共性 |
 | references/07-kit.md | know.js 组件 API |
 | references/09-style-studio.md | 风格工作室：四个入口、一题一问（推荐排第一 / 你定 / 自由对话）、三分法、汇总 → 风格图 → demo → 固化到 ~/vibe-knowledge-styles/ |
-| styles/INDEX.md | 风格库目录：44 套按 8 个家族分组（每套 STYLE.md + still.jpg，样片源码 styles/_samples/） |
+| resources/styles/INDEX.md | 风格库目录：44 套按 8 个家族分组（每套 STYLE.md + still.jpg，样片源码 resources/styles/_samples/） |
 | references/13-duration.md | 时长与拆解细腻度：五项复杂度打分、四档时长（字数 / 拍数 / 细腻度 / 能讲到 / 要砍掉）、推荐规则、不匹配提醒、封面停留时长 |
 | references/14-pitfalls.md | 制作踩坑清单（按环节）：渲染队列共用、AI 器物图结构错、配音对齐断、Wan 下载失败、CSS 清底色、AAC 峰值… |
 | references/12-style-families.md | 风格家族与扩充路线：为什么 7 套显得单薄、风格 × 手法两条轴、87 种 UI 风格的取舍表、从 promo-video 借了什么、增强档风格踩坑（MJ 画成器物、年代词带偏服饰、ESRGAN 分块错位、画布等解码、Vision 投影） |

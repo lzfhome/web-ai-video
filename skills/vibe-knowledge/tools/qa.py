@@ -5,32 +5,54 @@
 3) 响度：整体 LUFS / 真峰值（目标 ≈ −14.5 LUFS、≤ −1 dBTP）
 5) BGM 检查（强制）：成片开头跟 vibe-bgm 原曲开头做相关（fit_bgm 开头照原曲），<0.12 判定没有 BGM；同目录有 bgm.json 时一并报人声比
 4) 冻结检测：画面连续 >3 秒几乎不变就报警（违反「最长静止 ≤3 秒」；整段几十秒不变 = 录制出事，比如两路录制写坏同一个 picture.mp4，要重录）"""
-import re, subprocess, sys
+import re, shutil, subprocess, sys
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(errors="replace")
+    sys.stderr.reconfigure(errors="replace")
+
 def arg(n, d): return sys.argv[sys.argv.index(n) + 1] if n in sys.argv else d
 SK = Path(__file__).resolve().parent
+AIWORK = Path(__file__).resolve().parents[3]
+BGM_REF = AIWORK / "resources/music/vibe-bgm.m4a"
 src = Path(sys.argv[1]); every = float(arg("--every", "3")); out = Path(arg("--out", str(src.parent / "qa")))
 out.mkdir(parents=True, exist_ok=True); fr = out / "frames"; fr.mkdir(exist_ok=True)
 for f in fr.glob("*.png"): f.unlink()
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-vf", f"fps=1/{every},scale=1600:-2", str(fr / "f_%04d.png")], check=True)
 fs = sorted(fr.glob("f_*.png"))
-ocr = SK / "ocr"
-if not ocr.exists() or ocr.stat().st_mtime < (SK / "ocr.swift").stat().st_mtime:
-    subprocess.run(["swiftc", "-O", str(SK / "ocr.swift"), "-o", str(ocr)], check=True)
-txt = subprocess.run([str(ocr), *map(str, fs)], capture_output=True, text=True).stdout
-lines, seen = [], []
-for blk in txt.split("@@")[1:]:
-    ls = blk.strip().split("\n"); i = int(re.search(r"(\d+)", ls[0]).group(1)); t = (i - 1) * every
-    for l in ls[1:]:
-        m = re.match(r"\[y([\d.]+) h([\d.]+)\] (.*)", l)
-        if m and len(m.group(3).strip()) > 1 and m.group(3) not in seen[-30:]:
-            seen.append(m.group(3)); lines.append(f"{int(t // 60)}:{t % 60:04.1f}  {m.group(3)}")
+lines = []
+can_ocr = "--no-ocr" not in sys.argv and shutil.which("swiftc") is not None
+if can_ocr:
+    ocr = SK / "ocr"
+    try:
+        if not ocr.exists() or ocr.stat().st_mtime < (SK / "ocr.swift").stat().st_mtime:
+            subprocess.run(["swiftc", "-O", str(SK / "ocr.swift"), "-o", str(ocr)], check=True)
+        txt = subprocess.run([str(ocr), *map(str, fs)], capture_output=True, text=True, check=True).stdout
+        seen = []
+        for blk in txt.split("@@")[1:]:
+            ls = blk.strip().split("\n"); i = int(re.search(r"(\d+)", ls[0]).group(1)); t = (i - 1) * every
+            for l in ls[1:]:
+                m = re.match(r"\[y([\d.]+) h([\d.]+)\] (.*)", l)
+                if m and len(m.group(3).strip()) > 1 and m.group(3) not in seen[-30:]:
+                    seen.append(m.group(3)); lines.append(f"{int(t // 60)}:{t % 60:04.1f}  {m.group(3)}")
+    except Exception as exc:
+        print(f"⚠ OCR 跳过：{exc}")
+else:
+    print("⚠ 未找到 swiftc，跳过 OCR（Windows 正常；需要 OCR 时装 Xcode Command Line Tools）")
 (out / "ocr.txt").write_text("\n".join(lines), encoding="utf-8")
 w = 400; ims = [Image.open(f) for f in fs]; h = int(w * ims[0].height / ims[0].width); cols = 6
 sheet = Image.new("RGB", (cols * w, ((len(ims) + cols - 1) // cols) * h), "black"); d = ImageDraw.Draw(sheet)
-font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 20)
+font = None
+for fp in ("/System/Library/Fonts/Supplemental/Arial.ttf",
+           "C:/Windows/Fonts/arial.ttf",
+           "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"):
+    if Path(fp).exists():
+        font = ImageFont.truetype(fp, 20)
+        break
+if font is None:
+    font = ImageFont.load_default()
 for i, im in enumerate(ims):
     x, y = (i % cols) * w, (i // cols) * h; sheet.paste(im.resize((w, h)), (x, y)); t = i * every
     d.rectangle([x, y, x + 70, y + 24], fill="black"); d.text((x + 4, y + 2), f"{int(t // 60)}:{int(t % 60):02d}", fill="yellow", font=font)
@@ -53,12 +75,14 @@ import numpy as np
 def _pcm(f, t, sr=4000):
     b = subprocess.run(["ffmpeg", "-v", "error", "-t", str(t), "-i", str(f), "-ac", "1", "-ar", str(sr), "-f", "f32le", "-"], capture_output=True).stdout
     return np.frombuffer(b, np.float32).copy()
-ref = _pcm(SK.parent / "assets/music/vibe-bgm.m4a", 8); x = _pcm(src, 12); best, lag = 0.0, 0.0
-for k in range(0, 4000 * 3, 20):
-    seg = x[k:k + len(ref)]
-    if len(seg) < len(ref): break
-    c = float(np.dot(seg, ref) / (np.linalg.norm(seg) * np.linalg.norm(ref) + 1e-9))
-    if c > best: best, lag = c, k / 4000
+ref = _pcm(BGM_REF, 8); x = _pcm(src, 12); best, lag = 0.0, 0.0
+n = min(len(ref), len(x))
+if n:
+    ref = ref[:n]
+    for k in range(0, min(4000 * 3, len(x) - n) + 1, 20):
+        seg = x[k:k + n]
+        c = float(np.dot(seg, ref) / (np.linalg.norm(seg) * np.linalg.norm(ref) + 1e-9))
+        if c > best: best, lag = c, k / 4000
 bj = src.parent / "bgm.json"
 extra = ""
 if bj.exists():
@@ -70,4 +94,4 @@ if user_bgm:
 elif best >= 0.12:
     print(f"BGM：有 vibe-bgm（相关 {best:.2f}，从 {lag:.2f}s 起）{extra}")
 else:
-    print(f"⚠⚠ BGM：没检测到 vibe-bgm（相关 {best:.2f}）。除非用户要求换曲，知识大赏每条都必须有：确认 finish.py 已打强制钩子（bgm_force.py --patch），重跑 finish.py + deliver.sh")
+    print(f"⚠⚠ BGM：没检测到 vibe-bgm（相关 {best:.2f}）。除非用户要求换曲，知识大赏每条都必须有：确认 finish.py 已打强制钩子（bgm_force.py --patch），重跑 finish.py + deliver.py")

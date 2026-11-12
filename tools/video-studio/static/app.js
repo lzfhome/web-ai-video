@@ -1340,6 +1340,106 @@
 
   function basename(p) { return p.split("/").pop(); }
 
+  /* ---------- 配音（豆包语音 Seed-TTS 2.0） ---------- */
+  let ttsVoicesLoaded = false;
+
+  async function loadTTSVoices() {
+    if (ttsVoicesLoaded) return;
+    try {
+      const data = await (await fetch("/api/tts/voices")).json();
+      const sel = $("tts-voice");
+      sel.innerHTML = "";
+      (data.voices || []).forEach((v) => {
+        const opt = document.createElement("option");
+        opt.value = v.id;
+        opt.textContent = `${v.gender} · ${v.name}  ${v.id.replace(/_uranus_bigtts$/, "")}`;
+        sel.appendChild(opt);
+      });
+      ttsVoicesLoaded = true;
+    } catch (err) {
+      toast("音色列表加载失败");
+    }
+  }
+
+  function ttsRow(f) {
+    const row = document.createElement("div");
+    row.className = "tts-row";
+    const when = new Date(f.mtime * 1000).toLocaleString();
+    const meta = document.createElement("div");
+    meta.className = "tts-meta";
+    meta.innerHTML = `<div class="tts-name">${f.filename}</div>
+      <div class="tts-sub">${when} · ${(f.bytes / 1024).toFixed(1)} KB</div>`;
+    const audio = document.createElement("audio");
+    audio.controls = true;
+    audio.preload = "none";
+    audio.src = f.url;
+    const dl = document.createElement("a");
+    dl.className = "mini-btn2";
+    dl.href = f.url;
+    dl.download = f.filename;
+    dl.textContent = "下载";
+    row.append(meta, audio, dl);
+    return row;
+  }
+
+  async function loadTTSFiles() {
+    try {
+      const data = await (await fetch("/api/tts/files")).json();
+      const list = $("tts-list");
+      const files = data.files || [];
+      list.innerHTML = "";
+      $("tts-count").textContent = files.length ? `${files.length} 条` : "";
+      if (!files.length) {
+        list.innerHTML = '<p class="tip-muted" style="padding:12px 4px;">还没有配音，上面写一句试试。</p>';
+        return;
+      }
+      files.forEach((f) => list.appendChild(ttsRow(f)));
+    } catch (err) {
+      toast("配音列表加载失败");
+    }
+  }
+
+  async function ttsGenerate() {
+    const text = $("tts-text").value.trim();
+    if (!text) return toast("先写点文字");
+    const body = {
+      text,
+      voice: $("tts-voice").value,
+      speed: Number($("tts-speed").value) || 1,
+      sample_rate: Number($("tts-rate").value) || 24000,
+      format: "mp3",
+    };
+    const emo = $("tts-emotion").value.trim();
+    if (emo) body.emotion = emo;
+
+    const btn = $("tts-generate");
+    btn.disabled = true;
+    const label = btn.textContent;
+    btn.textContent = "生成中…";
+    try {
+      const r = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || "生成失败");
+      toast(`已生成 ${(data.bytes / 1024).toFixed(1)} KB`);
+      await loadTTSFiles();
+    } catch (err) {
+      toast("配音失败：" + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+    }
+  }
+
+  $("tts-generate").addEventListener("click", ttsGenerate);
+  $("tts-refresh").addEventListener("click", loadTTSFiles);
+  $("tts-demo").addEventListener("click", () => {
+    $("tts-text").value = "天地不仁，以万物为刍狗。";
+  });
+
   /* ---------- chips（快捷示例） ---------- */
   document.querySelectorAll("#chips .chip, .tip-block .chip").forEach((chip) => {
     chip.addEventListener("click", () => {
@@ -1356,10 +1456,11 @@
     document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
     const tb = document.querySelector(`.tab[data-view="${v}"]`);
     if (tb) tb.classList.add("active");
-    ["create", "assets", "usage", "cap"].forEach((k) => ($("view-" + k).hidden = k !== v));
+    ["create", "voice", "assets", "usage", "cap"].forEach((k) => ($("view-" + k).hidden = k !== v));
     if (v === "usage") loadUsage();
     if (v === "assets") { updateBatchProgress(); updateImageJobs(); }
     if (v === "cap") renderCaps();
+    if (v === "voice") { loadTTSVoices(); loadTTSFiles(); }
     try { localStorage.setItem(TAB_KEY, v); } catch (err) {}
   }
   document.querySelectorAll(".tab").forEach((tab) => {
@@ -1369,7 +1470,7 @@
   (function restoreTab() {
     try {
       const saved = localStorage.getItem(TAB_KEY);
-      if (saved && ["create", "assets", "usage", "cap"].includes(saved)) switchTab(saved);
+      if (saved && ["create", "voice", "assets", "usage", "cap"].includes(saved)) switchTab(saved);
     } catch (err) {}
   })();
 

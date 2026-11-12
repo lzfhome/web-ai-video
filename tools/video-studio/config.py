@@ -9,6 +9,7 @@ SECRETS_PATH = ROOT / "config.secrets.json"
 SECRET_KEYS = {
     "api_key", "base_url", "public_base_url",
     "access_key_id", "secret_access_key", "usage_apikey_id",
+    "tts_api_key",
 }
 
 DEFAULT_CONFIG = {
@@ -18,6 +19,7 @@ DEFAULT_CONFIG = {
     "access_key_id": "",
     "secret_access_key": "",
     "usage_apikey_id": "",
+    "tts_api_key": "",
     "story_model": "deepseek-v4-1-flash-260910",
     "story_models": {
         "deepseek-v4-1-flash-260910": "DeepSeek V4.1 Flash",

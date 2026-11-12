@@ -31,7 +31,7 @@
 | `cutaway` | 线稿剖面图：AI 画不准的器物 / 结构用代码画，线条按序描出、色块弹出、标签淡入；画面标「代码示意」 | `cutaway(s, { x, y, w: 700, h: 600, lines: [{ d, color, width }], blocks: [{ x, y, w, h, fill, stroke }], labels: [["外 · 方鉴", 596, 110, GOLD]] }).update(t, at, out)` |
 | `tokens` | 一排小方块依次弹出，可「化掉」只剩 keep 块（冰化了、钱花了） | `tokens(s, { x, y, n: 6, size: 80 }).update(t, at, meltAt, keep, out)` |
 
-视觉调查的原文排版：每个字放进等宽格（`width: 44px`），划重点和画圈就能按「第几行第几个字」精确定位（见 styles/_samples/styles2_film.js）。
+视觉调查的原文排版：每个字放进等宽格（`width: 44px`），划重点和画圈就能按「第几行第几个字」精确定位（见 resources/styles/_samples/styles2_film.js）。
 
 cine 自带的也都能用：`appear slam typeText codeCard quoteCard sourceTag recapMap`（ui.js），`Particles Clock Bars Showroom Liquid Tunnel`（scenes/）。粒子场景在 render 里自己画 WebGL，就不要再调 bg。
 

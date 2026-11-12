@@ -23,8 +23,8 @@
 
 ## 渲染
 
-- **cine/queue.txt 被几个会话共用**。用 `>` 覆盖写，或者在已有 queue.sh 运行时再起一个，都会让两路 record.py 同时写同一个 picture.mp4，结果是长时间冻结，或者 H.264 数据直接损坏（04b 第一版冻了 80 秒）。做法：只用 `>>` 追加；先 `pgrep -f cine/tools/queue.sh`，有队列在跑就交给它；也可以绕开队列，直接按顺序跑 record.py → finish.py → deliver.sh。
-- **只换配乐不用重录画面**：改 film.js 的 music 后，只跑 finish.py + deliver.sh（约 1 分钟）。picture.mp4 不动。
+- **queue.txt / 队列并发**。用 `>` 覆盖写，或者同时起两个队列，都会让两路 record.py 同时写同一个 picture.mp4，结果是长时间冻结，或者 H.264 数据直接损坏（04b 第一版冻了 80 秒）。做法：只用 `>>` 追加；用 `queue.py`（自带 lock，第二个会直接退出）；也可以绕开队列，直接按顺序跑 record.py → finish.py → deliver.py。
+- **只换配乐不用重录画面**：改 film.js 的 music 后，只跑 finish.py + deliver.py（约 1 分钟）。picture.mp4 不动。
 - **交付前一定跑 qa.py**：现在会报 >3 秒的静止画面；>10 秒的冻结基本就是录制出事了。
 
 ## 配乐
@@ -37,4 +37,4 @@
 ## 交付
 
 - **封面接成开头帧**（cover_first.py）会重新编码 AAC，峰值会被抬高 0.5–1 dB；工具里已经加了限幅（约 −1.4 dBFS）。交付前用 ebur128 再看一眼真峰值是否 ≤ −1 dBTP。
-- **只换了音频也要重新接封面**：deliver.sh 会输出不带封面的版本，覆盖交付文件夹前记得再跑一次 cover_first.py。
+- **只换了音频也要重新接封面**：deliver.py 会输出不带封面的版本，覆盖交付文件夹前记得再跑一次 cover_first.py。

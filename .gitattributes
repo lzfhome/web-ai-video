@@ -1,0 +1,22 @@
+# 跨平台文本：脚本统一 LF，避免 Windows checkout 后 shebang 变成 CRLF
+* text=auto
+*.sh text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+
+# 二进制
+*.ttf binary
+*.wav binary
+*.mp3 binary
+*.m4a binary
+*.mp4 binary
+*.mov binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.zip binary
