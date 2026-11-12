@@ -37,6 +37,21 @@ resources/references/**/*.mp4
 resources/references/**/*.mov
 resources/references/**/*.wav
 resources/references/**/*.m4a
+resources/references/**/*.png
+resources/references/**/*.jpg
+resources/references/**/*.jpeg
+resources/references/**/*.webp
+resources/references/**/*.gif
+resources/references/**/*.doc
+resources/references/**/*.docx
+resources/references/**/*.pdf
+resources/references/**/*.ppt
+resources/references/**/*.pptx
+resources/references/**/*.xls
+resources/references/**/*.xlsx
+resources/references/**/*.zip
+resources/references/**/*.rar
+resources/references/**/*.7z
 
 # ===== 大体积音乐源文件（FLAC 只留本地；入库只留 MP3） =====
 resources/music/**/*.flac
