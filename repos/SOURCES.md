@@ -4,7 +4,7 @@
 
 | 目录 | 上游 | Commit | License |
 |---|---|---|---|
-| `vibe-knowledge-andy/` | https://github.com/andyhuo520/vibe-knowledge | `c3a13a8` | MIT |
+| `vibe-knowledge-andy/` | https://github.com/andyhuo520/vibe-knowledge | `c3a13a8` | MIT · 已并入 `skills/ai-teardown/`，不再单独 vendor |
 | `vibe-knowledge-worlds3/` | https://github.com/worlds3/vibe-knowledge | `0d0249f` | 仓库未声明 License（仅参考，不直接复用代码） |
 | `vibe-knowledge-interactive/` | https://github.com/wchhywizd/vibe-knowledge-interactive | `240ec57` | 代码 MIT / 文档 CC BY 4.0 |
 
