@@ -1,4 +1,4 @@
-# ===== 作品产物（源码 + build + deliveries，全部不进 git） =====
+﻿# ===== 作品产物（源码 + build + deliveries，全部不进 git） =====
 workspaces/vibe-knowledge/projects/
 
 # ===== 构建/中间产物 =====
@@ -52,6 +52,9 @@ resources/references/**/*.xlsx
 resources/references/**/*.zip
 resources/references/**/*.rar
 resources/references/**/*.7z
+
+# ===== 大体积字体：LXGW 只留本地（ai-teardown 用；缺了会回退系统楷体） =====
+skills/ai-teardown/engine/assets/fonts/LXGWWenKai-*.ttf
 
 # ===== 大体积音乐源文件（FLAC 只留本地；入库只留 MP3） =====
 resources/music/**/*.flac
