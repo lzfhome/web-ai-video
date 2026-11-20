@@ -1,0 +1,74 @@
+{
+  "font": "kai",
+  "type": {
+    "size": 66,
+    "source_size": 18,
+    "tracking": 3,
+    "footer_size": 23,
+    "footer2_size": 19
+  },
+  "timing": {
+    "char": 0.34,
+    "credit_hold": 2.4,
+    "tail": 0.8,
+    "after": { "per_sec": 0.5, "min": 5.0, "max": 8.0 },
+    "min": 4,
+    "max": 40,
+    "fade": 0.45
+  },
+  "scene_seconds": 10,
+  "transition": 0.3,
+  "tail": 0.4,
+  "card": {
+    "lead": 1.2,
+    "tail": 0.8,
+    "fade": 1.0
+  },
+  "gap": {
+    "image_in": 0.6,
+    "text1": 1.5,
+    "text2": 2.4,
+    "credit": 1.5,
+    "text_dur": 0.95,
+    "credit_dur": 0.95,
+    "rise": 12
+  },
+  "effects": {
+    "bokeh": 6,
+    "bokeh_opacity": 1,
+    "bokeh_size": 1,
+    "bokeh_rise": 1,
+    "dust": 36,
+    "dust_opacity": 1,
+    "dust_size": 1,
+    "dust_glow": 1,
+    "mist": 1,
+    "mist_speed": 1,
+    "grain": 0.035,
+    "vignette": 0.6,
+    "halo": 1,
+    "sweep": 1,
+    "zoom": 0.04,
+    "drift": 20,
+    "text_glow": 1
+  },
+  "book": {
+    "x": 132,
+    "y": 148,
+    "w": 430,
+    "h": 606,
+    "tilt": -1.8,
+    "border": 2,
+    "frame": "#000000",
+    "mat": 0,
+    "rim": 1.5
+  },
+  "bgm": {
+    "from": 0,
+    "gain_db": -13,
+    "fade_in": 2.0,
+    "fade_out": 6.0
+  },
+  "palettes": ["jade", "ember", "moon", "ink"],
+  "scene_type_size": { "1": 70, "2": 58, "3": 52, "4": 46, "5": 42 }
+}

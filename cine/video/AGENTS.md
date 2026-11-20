@@ -9,6 +9,7 @@
 | `engines/dom/` | DOM/CSS + Three.js 渲染引擎（`index.html` + `core.js` + `record.py`） |
 | `engines/canvas/` | Canvas + WebCodecs 快速通道（`index.html` + `engine.js` + `components.js`） |
 | `engines/deliver.py` | 把 `build/lesson<lesson>.mp4` 收进 `deliveries/<日期>_<版本>/`，生成 cover / post / notes |
+| `engines/watermark.py` | 右上角文字水印；默认 dry-run，输出 `<原名>_wm.mp4` |
 | `engines/queue.py` | 按 `queue.txt` 批量渲染 + 交付 |
 | `tools/update_series.py` | 扫描项目，更新 `series.json`（集数、封面、时长），给课程页用 |
 
@@ -32,6 +33,16 @@ deliveries/<日期>_<版本>/
 ├── post.txt
 └── notes.md
 ```
+
+## watermark.py
+
+```powershell
+python cine/video/engines/watermark.py <video|dir> --text "B站@__小凡__" --yes
+python cine/video/engines/watermark.py deliveries --text "B站@__小凡__" --recursive --yes
+```
+
+- 默认输出 `<原名>_wm.mp4`；`--inplace` 先备份 `.bak` 再替换
+- 默认右上角，字号 `h*0.028`，边距 `w/h*0.03`，白色 35%
 
 ## queue.py
 

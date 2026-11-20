@@ -12,7 +12,7 @@ vendor/   第三方运行时（three.js）
 一条产线 = `workspaces/vibe-knowledge/line/<name>/`，它选择这里的引擎并给参数。
 产物 = `workspaces/vibe-knowledge/projects/<work>/`，不进 git。
 
-各子目录的说明在各自的 `README.md`。
+各子目录的说明在各自的 `AGENTS.md`。
 
 ## 分层
 
@@ -32,7 +32,7 @@ vendor/   第三方运行时（three.js）
 
 ## BGM 获取
 
-详细命令和注意事项见 [`audio/README.md`](audio/README.md) 的「BGM 获取」一节。原则：
+详细命令和注意事项见 [`audio/AGENTS.md`](audio/AGENTS.md) 的「BGM 获取」一节。原则：
 
 - 先找官方/CC 源：YouTube 作者的 Topic 频道、Free Music Archive、Pixabay、Mixkit、Freesound。
 - 免费低音质兜底用网易云 `fee=8` 的 128kbps 版，仅自用；发布/商用要授权。
@@ -40,4 +40,4 @@ vendor/   第三方运行时（three.js）
 - 固化脚本：`python cine/audio/tools/get_bgm.py search|download|netease|adopt|library`，输出 JSON，agent 直接调用。
 - 网易云专用：`musicdl` 已装在 `tools/local/musicdl`，封装 `python cine/audio/tools/musicdl_bgm.py search|download`，可下 FLAC + 320k MP3。
 - 网络先直连；超时/重置时用 `socks5://127.0.0.1:1080`，或按 `AGENTS.md` 用用户提供的代理。
-- BGM 文件放 `resources/music/`，不要放 `cine/`；入库时更新 `resources/music/README.md`。
+- BGM 文件放 `resources/music/`，不要放 `cine/`；入库时更新 `resources/music/AGENTS.md`。

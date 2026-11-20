@@ -1,0 +1,127 @@
+{
+  "id": "zhuxian-eight",
+  "title": "诛仙 · 八句话",
+  "book": {
+    "name": "诛仙",
+    "author": "萧鼎",
+    "publisher": "朝华出版社",
+    "volumes": ["第一册", "第二册", "第三册", "第四册", "第五册", "第六册", "第七册", "第八册"]
+  },
+  "bgm": "resources/music/merry-christmas-mr-lawrence-piano.mp3",
+  "covers": [
+    "assets/zx-1.jpg", "assets/zx-2.jpg", "assets/zx-3.jpg", "assets/zx-4.jpg",
+    "assets/zx-5.jpg", "assets/zx-6.jpg", "assets/zx-7.jpg", "assets/zx-8.jpg"
+  ],
+  "bio": [
+    "萧鼎，原名张戬，1976 年生，福州仓山人。",
+    "从小喜欢看武侠小说，1995 年考入福建工程学院工商企业管理专业。",
+    "1998 年毕业后，他在期货公司和布行上过班。",
+    "2001 年，他玩网游时无意中闯进玄幻武侠小说网站，从此开始写作，成了网络写手。",
+    "2002 年，第一部长篇《暗黑之路》在台湾出版。",
+    "《诛仙》最早连载于幻剑书盟，2003 年在台湾出版，2005 年 4 月大陆版面世，2007 年 6 月第八册大结局出版。",
+    "2012 年起，他写出《诛仙第二部》《戮仙》《天影》。",
+    "2019 年他获茅盾文学新人奖，2024 年完成《诛仙》修订版，2025 年当选福建省作协网络作家分会主席。"
+  ],
+  "scenes": [
+    {
+      "lines": ["天地不仁，", "以万物为刍狗。"],
+      "type": "citation",
+      "speaker": "老子",
+      "source": "《道德经》第五章",
+      "context": "《诛仙》开篇引《道德经》，冷、断、没有商量。",
+      "marks": [
+        { "text": "天地不仁", "feel": "firm" },
+        { "text": "，", "pause": 0.2 },
+        { "text": "刍狗", "feel": "heavy" }
+      ]
+    },
+    {
+      "lines": ["九幽阴灵，诸天神魔，以我血躯，奉为牺牲。", "三生七世，永堕阎罗，只为情故，虽死不悔。"],
+      "type": "dialogue",
+      "speaker": "碧瑶",
+      "source": "第四十章 痴情咒",
+      "context": "碧瑶以魂飞魄散为代价催动痴情咒，咒语式递进，最后一句是誓。",
+      "marks": [
+        { "text": "九幽阴灵", "feel": "firm" },
+        { "text": "以我血躯", "feel": "heavy" },
+        { "text": "三生七世", "feel": "slow" },
+        { "text": "虽死不悔", "feel": "slow" }
+      ]
+    },
+    {
+      "lines": ["我不后悔，十年了，", "我心中还是记挂着你。"],
+      "type": "dialogue",
+      "speaker": "陆雪琪",
+      "source": "第三十六章 深痕",
+      "context": "十年后重逢，压着情绪，最后承认牵挂。",
+      "marks": [
+        { "text": "我不后悔", "feel": "firm" },
+        { "text": "，", "pause": 0.2 },
+        { "text": "十年了", "feel": "heavy" },
+        { "text": "，", "pause": 0.4 },
+        { "text": "我心中还是", "feel": "soft" },
+        { "text": "记挂着你", "feel": "slow" },
+        { "text": "。", "pause": 0.2 }
+      ]
+    },
+    {
+      "lines": ["瑶儿，为父的许久没有来看你了，", "你有没有生我的气啊……"],
+      "type": "dialogue",
+      "speaker": "鬼王",
+      "source": "第十章 凶灵",
+      "context": "鬼王面对碧瑶，愧疚、试探、哄劝。",
+      "marks": [
+        { "text": "瑶儿", "feel": "soft" },
+        { "text": "，", "pause": 0.3 },
+        { "text": "许久没有来看你了", "feel": "slow" },
+        { "text": "生我的气啊", "feel": "slow" }
+      ]
+    },
+    {
+      "lines": ["外面看去，诛仙剑阵威风凛凛，", "道玄真人更如神仙一般。", "但在他仙风道骨的外表之下，", "脸色也开始微微苍白起来。"],
+      "type": "narration",
+      "source": "第十章 神剑",
+      "context": "先写剑阵的威势，再翻到道玄的衰弱，前半平，后半沉。",
+      "marks": [
+        { "text": "威风凛凛", "feel": "firm" },
+        { "text": "但在他仙风道骨的外表之下", "feel": "slow" },
+        { "text": "微微苍白", "feel": "heavy" }
+      ]
+    },
+    {
+      "lines": ["我会一直陪你的……"],
+      "type": "dialogue",
+      "speaker": "玲珑",
+      "source": "第十二章 情伤",
+      "context": "极轻的承诺，几乎听不见。",
+      "marks": [
+        { "text": "一直", "feel": "slow" },
+        { "text": "陪你的", "feel": "soft" }
+      ]
+    },
+    {
+      "lines": ["将来我会亲自上小竹峰，", "为我门下这两个不成器的家伙", "向你师父当面求亲的。"],
+      "type": "dialogue",
+      "speaker": "田不易",
+      "source": "第十三章 心意",
+      "footer": "《诛仙》 · 第七册 / 萧鼎 · 花山文艺出版社",
+      "context": "田不易嘴硬心软，前半干脆，说到求亲有点别扭。",
+      "marks": [
+        { "text": "亲自上小竹峰", "feel": "firm" },
+        { "text": "不成器的家伙", "feel": "soft" },
+        { "text": "求亲的", "feel": "heavy" }
+      ]
+    },
+    {
+      "lines": ["一阵轻风吹过，屋檐下的铃铛迎风而响，", "绿色的衣角轻轻飘起，", "仿佛也带着几分笑意。"],
+      "type": "narration",
+      "source": "尾声",
+      "footer": "《诛仙》 · 第八册 / 萧鼎 · 花山文艺出版社",
+      "context": "全书收束，轻、缓，最后落在笑意上。",
+      "marks": [
+        { "text": "一阵轻风吹过", "feel": "soft" },
+        { "text": "仿佛也带着几分笑意", "feel": "slow" }
+      ]
+    }
+  ]
+}

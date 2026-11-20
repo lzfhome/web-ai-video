@@ -59,6 +59,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if raw == "/resources" or raw.startswith("/resources/"):
             return str(_safe_join(RESOURCES, raw[len("/resources"):]))
 
+        # /line/<workspace>/<line>/... → workspaces/<workspace>/line/<line>/...
+        if raw.startswith("/line/"):
+            parts = [p for p in raw[len("/line/"):].split("/") if p]
+            if len(parts) >= 3:
+                base = AIWORK / "workspaces" / parts[0] / "line" / parts[1]
+                return str(_safe_join(base, "/".join(parts[2:])))
+
         if raw.startswith("/cine/"):
             rel = raw[len("/cine/"):]
             # 旧项目里的 film.js / film.canvas.js 仍写 ../../cine/engine|canvas，

@@ -45,7 +45,14 @@ function seek(t) {
 
 async function boot() {
   const timings = await (await fetch(`/lessons/${LESSON}/build/timings.json`)).json();
-  film = await import(`/lessons/${LESSON}/film.js`);
+  // 优先按 project.json 的 line 加载产线入口；没有则回退到作品里的 film.js
+  try {
+    const meta = await (await fetch("/project.json")).json();
+    if (!meta.workspace || !meta.line) throw new Error("project.json 缺 workspace/line");
+    film = await import(`/line/${meta.workspace}/${meta.line}/film.js?v=${Date.now()}`);
+  } catch (e) {
+    film = await import(`/lessons/${LESSON}/film.js?v=${Date.now()}`);
+  }
   ctx.narr = new Narr(timings, film.COLD);
   await Promise.all([
     document.fonts.load("900 100px NotoSC", "视频帧函数时间"), document.fonts.load("500 40px NotoSC", "字幕"), document.fonts.load("700 40px NotoSC", "字幕"),

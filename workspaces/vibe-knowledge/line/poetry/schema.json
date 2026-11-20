@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "poetry work",
+  "type": "object",
+  "required": ["title", "scenes"],
+  "additionalProperties": false,
+  "definitions": {
+    "marks": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["text"],
+        "additionalProperties": false,
+        "properties": {
+          "text": { "type": "string", "minLength": 1 },
+          "feel": { "enum": ["firm", "heavy", "soft", "fast", "slow"] },
+          "pause": { "type": "number", "minimum": 0, "maximum": 0.6 }
+        }
+      }
+    },
+    "pacing": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["text"],
+        "additionalProperties": false,
+        "properties": {
+          "text": { "type": "string" },
+          "char": { "type": "number", "minimum": 0.05, "maximum": 1.5 },
+          "pause": { "type": "number", "minimum": 0, "maximum": 3 },
+          "attach": { "type": "boolean" }
+        }
+      }
+    },
+    "card": {
+      "type": "object",
+      "required": ["lines"],
+      "additionalProperties": false,
+      "properties": {
+        "lines": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 7,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "type": { "enum": ["dialogue", "narration", "citation"] },
+        "speaker": { "type": "string" },
+        "source": { "type": "string" },
+        "context": { "type": "string" },
+        "bio": { "type": "string" },
+        "category": { "type": "string" },
+        "type_size": { "type": "number" },
+        "marks": { "$ref": "#/definitions/marks" },
+        "pacing": { "$ref": "#/definitions/pacing" }
+      }
+    }
+  },
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string", "minLength": 1 },
+    "book": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "author": { "type": "string" },
+        "publisher": { "type": "string" },
+        "volumes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "bgm": { "type": "string" },
+    "bgm_from": { "type": "number", "minimum": 0 },
+    "bgm_fade_in": { "type": "number", "minimum": 0 },
+    "covers": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "bio": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "anyOf": [
+          { "required": ["lines"] },
+          { "required": ["cards"] }
+        ],
+        "properties": {
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 7,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "cards": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": { "$ref": "#/definitions/card" }
+          },
+          "card_fade": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+          "card_lead": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+          "card_tail": { "type": "number", "minimum": 0, "maximum": 3.0 },
+          "type": { "enum": ["dialogue", "narration", "citation"] },
+          "speaker": { "type": "string" },
+          "source": { "type": "string" },
+          "context": { "type": "string" },
+          "bio": { "type": "string" },
+          "footer": { "type": "string" },
+          "header": { "type": "string" },
+          "volume": { "type": "string" },
+          "cover": { "type": "string" },
+          "palette": { "type": "string" },
+          "type_size": { "type": "number" },
+          "blur": { "type": "number" },
+          "brightness": { "type": "number" },
+          "flip": { "type": "boolean" },
+          "marks": { "$ref": "#/definitions/marks" },
+          "pacing": { "$ref": "#/definitions/pacing" }
+        }
+      }
+    }
+  }
+}

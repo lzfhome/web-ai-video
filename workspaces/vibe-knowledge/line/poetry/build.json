@@ -1,22 +1,35 @@
-// 《诛仙》八册 · 八句话（80 秒）
-// 每册一场，10 秒；书封就是背景；文字全部来自原文。
-// 改完让 agent 跑：python project.py build poetry
+// 《诛仙》八册 · 八句话（无配音）
+// 每场时长按字数自动计算：lead + 字数×char + credit_hold + tail（见 timing）
+// 用法：python project.py build poetry
 {
   "id": "zhuxian-eight",
   "title": "诛仙 · 八句话",
   "fps": 30,
   "poster": 5,
-
   "font": "kai",
-  // credit_size 不写就按主句字号 × 0.6 自动跟随
-  "type": { "size": 66, "source_size": 18, "tracking": 3 },
-
-  // 8 场 × 10 秒
+  "type": {
+    "size": 66,
+    "source_size": 18,
+    "tracking": 3,
+    "footer_size": 23,
+    "footer2_size": 19
+  },
   "scene_seconds": 10,
+  "timing": {
+    "char": 0.34,
+    "credit_hold": 2.4,
+    "tail": 0.8,
+    "after": {
+      "per_sec": 0.25,
+      "min": 2.5,
+      "max": 4.0
+    },
+    "min": 4,
+    "max": 40,
+    "fade": 0.45
+  },
   "transition": 0.3,
   "tail": 0.4,
-
-  // 10 秒比 15 秒紧，入场整体提前；署名和主句同一拍出来
   "gap": {
     "image_in": 0.6,
     "text1": 1.5,
@@ -26,7 +39,6 @@
     "credit_dur": 0.95,
     "rise": 12
   },
-
   "effects": {
     "bokeh": 6,
     "bokeh_opacity": 1,
@@ -46,18 +58,25 @@
     "drift": 20,
     "text_glow": 1
   },
-
-  "book": { "x": 132, "y": 148, "w": 430, "h": 606, "tilt": -1.8 },
-
+  "book": {
+    "x": 132,
+    "y": 148,
+    "w": 430,
+    "h": 606,
+    "tilt": -1.8,
+    "border": 2,
+    "frame": "#000000",
+    "mat": 0,
+    "rim": 1.5
+  },
   "bgm": {
     "src": "resources/music/merry-christmas-mr-lawrence-piano.mp3",
     "from": 0,
     "gain_db": -13,
     "fade_in": 2.0,
     "fade_out": 3.0,
-    "user_request": "用户明确要求用《圣诞快乐，劳伦斯先生》钢琴曲作为 BGM"
+    "user_request": "用户明确要求用《圣诞快乐，劳伦斯先生》作为 BGM"
   },
-
   "scenes": [
     {
       "cover": "assets/zx-1.jpg",
@@ -65,96 +84,488 @@
       "blur": 6,
       "brightness": 0.5,
       "flip": true,
-      "lines": ["天地不仁，", "以万物为刍狗。"],
-      "type": { "size": 70 },
-      "credit": "萧鼎",
-      "source": "序章",
+      "lines": [
+        "天地不仁，",
+        "以万物为刍狗。"
+      ],
+      "type": {
+        "size": 70
+      },
+      "credit": "老子",
+      "source": "《道德经》第五章",
       "header": "VOL. I",
-      "footer": "书封：诛仙 · 第一册 / 萧鼎 · 朝华出版社 · BGM：Merry Christmas, Mr. Lawrence"
+      "footer": "《诛仙》 · 第一册 / 萧鼎 · 朝华出版社",
+      "footer2": "萧鼎，原名张戬，1976 年生，福州仓山人。",
+      "pacing": [
+        {
+          "text": "天地不仁",
+          "char": 0.32
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.8
+        },
+        {
+          "text": "以万物为",
+          "char": 0.28
+        },
+        {
+          "text": "刍狗",
+          "char": 0.42
+        },
+        {
+          "text": "。",
+          "char": 0.5
+        }
+      ]
     },
     {
       "cover": "assets/zx-2.jpg",
       "palette": "ember",
       "blur": 6,
       "brightness": 0.46,
-      "lines": ["九幽阴灵，诸天神魔，以我血躯，奉为牺牲。", "三生七世，永堕阎罗，只为情故，虽死不悔。"],
-      "type": { "size": 50 },
+      "lines": [
+        "九幽阴灵，诸天神魔，以我血躯，奉为牺牲。",
+        "三生七世，永堕阎罗，只为情故，虽死不悔。"
+      ],
+      "type": {
+        "size": 50
+      },
       "credit": "碧瑶",
       "source": "第四十章 痴情咒",
       "header": "VOL. II",
-      "footer": "书封：诛仙 · 第二册 / 萧鼎 · 朝华出版社"
+      "footer": "《诛仙》 · 第二册 / 萧鼎 · 朝华出版社",
+      "footer2": "从小喜欢看武侠小说，1995 年考入福建工程学院工商企业管理专业。",
+      "quotes": true,
+      "pacing": [
+        {
+          "text": "「",
+          "attach": true
+        },
+        {
+          "text": "九幽阴灵",
+          "char": 0.32
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.5
+        },
+        {
+          "text": "诸天神魔",
+          "char": 0.34
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.5
+        },
+        {
+          "text": "以我血躯",
+          "char": 0.3
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.6
+        },
+        {
+          "text": "奉为牺牲",
+          "char": 0.4
+        },
+        {
+          "text": "。",
+          "char": 0.5,
+          "pause": 0.8
+        },
+        {
+          "text": "三生七世",
+          "char": 0.36
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.5
+        },
+        {
+          "text": "永堕阎罗",
+          "char": 0.4
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.6
+        },
+        {
+          "text": "只为情故",
+          "char": 0.42
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.7
+        },
+        {
+          "text": "虽死不悔",
+          "char": 0.52
+        },
+        {
+          "text": "。",
+          "char": 0.5
+        },
+        {
+          "text": "」",
+          "attach": true
+        }
+      ]
     },
     {
       "cover": "assets/zx-3.jpg",
       "palette": "moon",
       "blur": 6,
       "brightness": 0.46,
-      "lines": ["我不后悔，十年了，", "我心中还是记挂着你。"],
-      "type": { "size": 64 },
+      "lines": [
+        "我不后悔，十年了，",
+        "我心中还是记挂着你。"
+      ],
+      "type": {
+        "size": 64
+      },
       "credit": "陆雪琪",
       "source": "第三十六章 深痕",
       "header": "VOL. III",
-      "footer": "书封：诛仙 · 第三册 / 萧鼎 · 朝华出版社"
+      "footer": "《诛仙》 · 第三册 / 萧鼎 · 朝华出版社",
+      "footer2": "1998 年毕业后，他在期货公司和布行上过班。",
+      "quotes": true,
+      "pacing": [
+        {
+          "text": "「",
+          "attach": true
+        },
+        {
+          "text": "我不后悔",
+          "char": 0.3
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.7
+        },
+        {
+          "text": "十年了",
+          "char": 0.45
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.9
+        },
+        {
+          "text": "我心中还是",
+          "char": 0.28
+        },
+        {
+          "text": "记挂着你",
+          "char": 0.42
+        },
+        {
+          "text": "。",
+          "char": 0.6
+        },
+        {
+          "text": "」",
+          "attach": true
+        }
+      ]
     },
     {
       "cover": "assets/zx-4.jpg",
       "palette": "ink",
       "blur": 6,
       "brightness": 0.44,
-      "lines": ["瑶儿，为父的许久没有来看你了，", "你有没有生我的气啊……"],
-      "type": { "size": 58 },
+      "lines": [
+        "瑶儿，为父的许久没有来看你了，",
+        "你有没有生我的气啊……"
+      ],
+      "type": {
+        "size": 58
+      },
       "credit": "鬼王",
       "source": "第十章 凶灵",
       "header": "VOL. IV",
-      "footer": "书封：诛仙 · 第四册 / 萧鼎 · 朝华出版社"
+      "footer": "《诛仙》 · 第四册 / 萧鼎 · 朝华出版社",
+      "footer2": "2001 年，他玩网游时无意中闯进玄幻武侠小说网站，从此开始写作，成了网络写手。",
+      "quotes": true,
+      "pacing": [
+        {
+          "text": "「",
+          "attach": true
+        },
+        {
+          "text": "瑶儿",
+          "char": 0.4
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.7
+        },
+        {
+          "text": "为父的",
+          "char": 0.34
+        },
+        {
+          "text": "许久没有来看你了",
+          "char": 0.3
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.8
+        },
+        {
+          "text": "你有没有",
+          "char": 0.28
+        },
+        {
+          "text": "生我的气啊",
+          "char": 0.4
+        },
+        {
+          "text": "……",
+          "char": 0.6
+        },
+        {
+          "text": "」",
+          "attach": true
+        }
+      ]
     },
     {
       "cover": "assets/zx-5.jpg",
       "palette": "jade",
       "blur": 6,
       "brightness": 0.46,
-      "lines": ["外面看去，诛仙剑阵威风凛凛，", "道玄真人更如神仙一般。", "但在他仙风道骨的外表之下，", "脸色也开始微微苍白起来。"],
-      "type": { "size": 46 },
-      "credit": "道玄",
+      "lines": [
+        "外面看去，诛仙剑阵威风凛凛，",
+        "道玄真人更如神仙一般。",
+        "但在他仙风道骨的外表之下，",
+        "脸色也开始微微苍白起来。"
+      ],
+      "type": {
+        "size": 46
+      },
       "source": "第十章 神剑",
       "header": "VOL. V",
-      "footer": "书封：诛仙 · 第五册 / 萧鼎 · 朝华出版社"
+      "footer": "《诛仙》 · 第五册 / 萧鼎 · 朝华出版社",
+      "footer2": "2002 年，第一部长篇《暗黑之路》在台湾出版。",
+      "narration": true,
+      "pacing": [
+        {
+          "text": "外面看去",
+          "char": 0.28
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.4
+        },
+        {
+          "text": "诛仙剑阵威风凛凛",
+          "char": 0.3
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.5
+        },
+        {
+          "text": "道玄真人更如神仙一般",
+          "char": 0.3
+        },
+        {
+          "text": "。",
+          "char": 0.5,
+          "pause": 0.6
+        },
+        {
+          "text": "但在他仙风道骨的外表之下",
+          "char": 0.26
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.7
+        },
+        {
+          "text": "脸色也开始",
+          "char": 0.32
+        },
+        {
+          "text": "微微苍白起来",
+          "char": 0.46
+        },
+        {
+          "text": "。",
+          "char": 0.5
+        }
+      ]
     },
     {
       "cover": "assets/zx-6.jpg",
       "palette": "ember",
       "blur": 6,
       "brightness": 0.44,
-      "lines": ["我会一直陪你的……"],
-      "type": { "size": 70 },
+      "lines": [
+        "我会一直陪你的……"
+      ],
+      "type": {
+        "size": 70
+      },
       "credit": "玲珑",
       "source": "第十二章 情伤",
       "header": "VOL. VI",
-      "footer": "书封：诛仙 · 第六册 / 萧鼎 · 朝华出版社"
+      "footer": "《诛仙》 · 第六册 / 萧鼎 · 朝华出版社",
+      "footer2": "《诛仙》最早连载于幻剑书盟，2003 年在台湾出版，2005 年 4 月大陆版面世，2007 年 6 月第八册大结局出版。",
+      "quotes": true,
+      "pacing": [
+        {
+          "text": "「",
+          "attach": true
+        },
+        {
+          "text": "我会",
+          "char": 0.34
+        },
+        {
+          "text": "一直",
+          "char": 0.4
+        },
+        {
+          "text": "陪你的",
+          "char": 0.46
+        },
+        {
+          "text": "……",
+          "char": 0.6
+        },
+        {
+          "text": "」",
+          "attach": true
+        }
+      ]
     },
     {
       "cover": "assets/zx-7.jpg",
       "palette": "jade",
       "blur": 6,
       "brightness": 0.47,
-      "lines": ["将来我会亲自上小竹峰，", "为我门下这两个不成器的家伙", "向你师父当面求亲的。"],
-      "type": { "size": 54 },
+      "lines": [
+        "将来我会亲自上小竹峰，",
+        "为我门下这两个不成器的家伙",
+        "向你师父当面求亲的。"
+      ],
+      "type": {
+        "size": 54
+      },
       "credit": "田不易",
       "source": "第十三章 心意",
       "header": "VOL. VII",
-      "footer": "书封：诛仙 · 第七册 / 萧鼎 · 花山文艺出版社"
+      "footer": "《诛仙》 · 第七册 / 萧鼎 · 花山文艺出版社",
+      "footer2": "2012 年起，他写出《诛仙第二部》《戮仙》《天影》。",
+      "quotes": true,
+      "pacing": [
+        {
+          "text": "「",
+          "attach": true
+        },
+        {
+          "text": "将来我会亲自上小竹峰",
+          "char": 0.32
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.6
+        },
+        {
+          "text": "为我门下这两个",
+          "char": 0.3
+        },
+        {
+          "text": "不成器的家伙",
+          "char": 0.36
+        },
+        {
+          "text": "向你师父当面求亲的",
+          "char": 0.34
+        },
+        {
+          "text": "。",
+          "char": 0.5
+        },
+        {
+          "text": "」",
+          "attach": true
+        }
+      ]
     },
     {
       "cover": "assets/zx-8.jpg",
       "palette": "moon",
       "blur": 6,
       "brightness": 0.52,
-      "lines": ["一阵轻风吹过，屋檐下的铃铛迎风而响，", "绿色的衣角轻轻飘起，", "仿佛也带着几分笑意。"],
-      "type": { "size": 50 },
-      "credit": "萧鼎",
+      "lines": [
+        "一阵轻风吹过，屋檐下的铃铛迎风而响，",
+        "绿色的衣角轻轻飘起，",
+        "仿佛也带着几分笑意。"
+      ],
+      "type": {
+        "size": 50
+      },
       "source": "尾声",
       "header": "VOL. VIII",
-      "footer": "书封：诛仙 · 第八册 / 萧鼎 · 花山文艺出版社 · BGM：Merry Christmas, Mr. Lawrence"
+      "footer": "《诛仙》 · 第八册 / 萧鼎 · 花山文艺出版社",
+      "footer2": "2019 年他获茅盾文学新人奖，2024 年完成《诛仙》修订版，2025 年当选福建省作协网络作家分会主席。",
+      "narration": true,
+      "pacing": [
+        {
+          "text": "一阵轻风吹过",
+          "char": 0.3
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.5
+        },
+        {
+          "text": "屋檐下的铃铛迎风而响",
+          "char": 0.3
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.6
+        },
+        {
+          "text": "绿色的衣角轻轻飘起",
+          "char": 0.32
+        },
+        {
+          "text": "，",
+          "char": 0.35,
+          "pause": 0.7
+        },
+        {
+          "text": "仿佛也带着几分笑意",
+          "char": 0.36
+        },
+        {
+          "text": "。",
+          "char": 0.5
+        }
+      ]
     }
   ]
 }

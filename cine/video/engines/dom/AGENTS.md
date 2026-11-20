@@ -24,9 +24,8 @@ DOM/CSS + Three.js 渲染引擎。一条片 = 一个 `seek(t)`：给定秒数，
 | `ui.js` | 通用 DOM 动效组件（出现、强调、打字） |
 | `post.js` | 后期：HDR → 辉光 → ACES → 暗角 |
 | `glsl.js` | GLSL 片段（3D simplex 噪声等） |
-| `poetry.js` | poetry 引擎：书封背景 + 诗句 + 雨丝/光斑 |
 | `rpg-qa.js` | 像素问答引擎（旧组件，对应产线已删，代码保留） |
-| `scenes/` | 3D 场景组件（见 `scenes/README.md`） |
+| `scenes/` | 3D 场景组件（见 `scenes/AGENTS.md`） |
 
 ## 录制工具
 

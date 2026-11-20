@@ -1,4 +1,4 @@
-﻿# cine/audio
+# cine/audio
 
 配乐、音效、旁白时间轴、混音。
 
@@ -19,6 +19,7 @@
 | `tools/get_bgm.py` | BGM 搜索/下载/网易云兜底/sidecar/索引（agent 用，输出 JSON） |
 | `tools/musicdl_bgm.py` | 网易云专用：musicdl 搜索、FLAC 下载、转 320k MP3（agent 用） |
 | `tools/check_timings.py` | 检查时间轴有没有「句子挤在一起」 |
+| `tools/bgm_lead.py` | 通用：任意音频测开头静音，输出源曲裁剪起点；poetry 映射为 `bgm_from`（裁到 1.2s） |
 
 **分层**：`lib/` 是零件，`engines/` 是可执行引擎，`clients/` 是被 import 的客户端，`tools/` 是取素材/检查的工具。
 
@@ -121,7 +122,7 @@ $ff = 'D:\AIWork\tools\local\ffmpeg\ffmpeg-9.0.2-essentials_build\bin'
 
 - 必须给 `--ffmpeg-location`，否则会报 `ffprobe and ffmpeg not found`。
 - YouTube 源通常是 Opus/WebM；转 MP3 后约 210–250 kbps，属于转码，不是无损。
-- 下载后先 `ffprobe` 核对时长/码率，再改成 `<mood>_<artist>.mp3` 这种 ASCII 文件名；中文标题写进 `resources/music/README.md`。
+- 下载后先 `ffprobe` 核对时长/码率，再改成 `<mood>_<artist>.mp3` 这种 ASCII 文件名；中文标题写进 `resources/music/AGENTS.md`。
 
 ### 网易云免费版兜底
 
@@ -136,7 +137,7 @@ Invoke-WebRequest "https://music.163.com/song/media/outer/url?id=<id>.mp3" `
 ### 入库与混音
 
 - 临时下载放 `resources/music/_incoming/`，确认后移到 `resources/music/`。
-- 更新 `resources/music/README.md`：原曲、作者、时长、码率、来源、许可/用途。
+- 更新 `resources/music/AGENTS.md`：原曲、作者、时长、码率、来源、许可/用途。
 - 进 `finish.py` 混音前，可转成统一 WAV：
 
 ```powershell
@@ -149,7 +150,7 @@ ffmpeg -i in.mp3 -ar 48000 -ac 2 -c:a pcm_s16le out.wav
 - 网易云：`1341912654` / `434902428` / `1426611455` / `506650377`。
 - FMA CC BY：Jelsonic、Matthew C. Wright、Purrple Cat（备选，需署名）。
 
-> 版权：YouTube/网易云的曲目归原作者；`resources/music/README.md` 里写清“自用/不发布”，发布前换授权版本。
+> 版权：YouTube/网易云的曲目归原作者；`resources/music/AGENTS.md` 里写清“自用/不发布”，发布前换授权版本。
 
 ## 注意
 

@@ -32,6 +32,64 @@
 
 ---
 
+## 2026-11-19 · 新增视频右上角水印工具
+
+- **变更**：
+  - 新增 `cine/video/engines/watermark.py`：对单个视频或目录批量叠加右上角文字水印；默认 dry-run，`--yes` 执行；默认输出 `<原名>_wm.mp4`，`--inplace` 先备份 `.bak` 再替换。
+  - 默认字体 `C:/Windows/Fonts/msyh.ttc`，字号 `h*0.028`，边距 `w/h*0.03`，白色 35%，黑色阴影。
+- **原因**：成片需要在每一场景右上角带作者水印，且不修改 `poem.json` / `poetry.js`，现有和以后的项目都能复用。
+- **影响**：只影响显式调用该工具的视频；渲染管线不变。
+- **迁移**：无；对已有 `build/lesson*.mp4` 或 `deliveries/**/video.mp4` 手动跑一次即可。
+- **相关 files**：`cine/video/engines/watermark.py`、`cine/video/AGENTS.md`
+
+---
+
+## 2026-11-17 · poetry 单卡/多卡按场景切换
+
+- **变更**：
+  - `compose.py`：`scene.cards` 只有 1 张时展平为旧 `lines` 场景，走逐字/逐行 + 署名延迟；2 张及以上才保留 `cards`，走整块淡入淡出。同一支片可按场景混用。
+  - 多卡 `poem.json` 不再重复写顶层 `lines / type / credit / source / quotes / narration / pacing / footer2`，这些只保留在每张卡里。
+  - `retime.py` 复用 `compose.card_hold()`；`poetry.js` 抽出共用的 `layoutText()`，删除未使用的 `SCENE`；`render.py` 的校验和 `beats` 支持 `cards`。
+  - `schema.json` 允许 `cards` 最少 1 张。
+- **原因**：单卡场景应保持旧版文字特效，多卡场景才用整块切换；模式按场景决定，不按整支片子决定。
+- **影响**：单卡 `work.json` 仍写 `cards`，合成后自动变成旧场景；2 张以上多卡的时长和视觉不变。旧作品不需要改。
+- **迁移**：重跑 `compose.py` 或 `project.py build poetry --work ...` 即可；已交付成片不受影响。
+- **相关 files**：`workspaces/vibe-knowledge/line/poetry/{compose.py,retime.py,render.py,poetry.js,schema.json,TEMPLATE.md,AGENTS.md,SOURCES.md}`
+
+---
+
+## 2026-11-14 · poetry 章节行补全（对齐诛仙版式）
+
+- **变更**：
+  - `source` 字段改为“第X章 章名”；`footer` 继续写“《书名》· 第X册”。
+  - 章节行仍按诛仙版式：署名下方一行，跟在台词之后出现，`source_size` 18。
+- **原因**：之前 `source` 只写“第X册 卷名”，卡片上看不到章数；用户要求与诛仙版式一致。
+- **影响**：`poem.json` 的 `source` 语义变化：从“册名”改为“章名”；旧作品需把 `source` 改成章名，或在 `footer` 保留册名。
+- **迁移**：重渲；旧作品若 `source` 仍是册名，卡片会显示“第X册”而不是章名。
+- **相关 files**：`line/poetry/{poetry.js,defaults.json,TEMPLATE.md}`、`tools/local/qijie/work/*`
+
+---
+
+## 2026-11-13 · poetry 模板化：引擎归 line，作品只留数据
+
+- **变更**：
+  - poetry 引擎从 `cine/video/engines/dom/poetry.js` 迁到 `line/poetry/poetry.js`；`cine` 只保留 core/util/record/audio/deliver 等公共能力。
+  - 新增 `line/poetry/film.js`：入口从 `project.json` 的 lesson 读 `poem.json`，引擎不再拷进作品。
+  - `core.js` 优先按 `project.json` 的 `workspace + line` 加载 `/line/<workspace>/<line>/film.js`，失败回退旧 `/lessons/<id>/film.js`。
+  - `tools/lib/server.py` 新增 `/line/<workspace>/<line>/...` 路由。
+  - `project.py build poetry` 不再往作品复制 `film.js`；新增 `--work <work.json>`，走 `compose.py` 合成。
+  - 新增 `line/poetry/{defaults.json,compose.py,schema.json,build.skeleton.json,TEMPLATE.md,examples/zhuxian.work.json}`：work（题材/N 场/封面/BGM/内容）→ poem。
+  - `poetry-tts` 骨架改为引用 `/line/vibe-knowledge/poetry/poetry.js`。
+  - `project.py` 自动探测 `tools/local/ffmpeg/*/bin` 并写入 `FFMPEG`/`PATH`，换 Agent 不用手工设环境。
+  - `line/poetry/render.py` 增加 BGM 长度检查：短于成片时提前警告。
+  - `AGENTS.md` 新增「Agent 可执行标准（强制）」：AGENTS/TEMPLATE、根目录命令、样例与 smoke test、文档与代码一致。
+- **原因**：把“cine 公共能力 / line 私有机制 / work 内容”分层；以后新题材只写 work，不改引擎和作品代码。
+- **影响**：poetry 作品目录只剩 `poem.json` + `assets` + `build`，无 JS；老项目仍可走旧 `film.js` 与 cine 里的 legacy poetry.js。
+- **迁移**：新作品用 `python project.py build poetry --work <work.json> --name <slug>`；旧作品不动。
+- **相关 files**：`cine/video/engines/dom/{core.js,poetry.js}`、`tools/lib/server.py`、`project.py`、`workspaces/vibe-knowledge/line/poetry/*`、`line/poetry-tts/film.skeleton.js`
+
+---
+
 ## 2026-11-12 · image 拆分 + 共享 ffprobe 探测
 
 - **变更**：
@@ -57,7 +115,7 @@
   - `cine/video/dom` → `cine/video/engines/dom`；`cine/video/canvas` → `cine/video/engines/canvas`。
   - `cine/video/deliver.py`、`queue.py` → `engines/`；`update_series.py` → `tools/`。
   - `cine/image/ark.py` → `cine/image/engines/ark.py`。
-  - 同步：`tools/lib/server.py` 的 `/cine/*` 映射、`record.py` / `stills.py` / `clips.py` / `retail.py` 的 `parents`、`doctor.py`、`smoke_test.py`、`project.py`、`line/*/render.py`、各 README。
+  - 同步：`tools/lib/server.py` 的 `/cine/*` 映射、`record.py` / `stills.py` / `clips.py` / `retail.py` 的 `parents`、`doctor.py`、`smoke_test.py`、`project.py`、`line/*/render.py`、各 AGENTS.md。
   - `dom/index.html` 的入口改成绝对路径 `/cine/video/engines/dom/core.js`（相对路径在 `/cine/index.html` 下会解析错）。
 - **原因**：
   - 与 `cine/audio` 的「零件 / 引擎 / 客户端 / 工具」分层保持一致。
@@ -98,7 +156,7 @@
 ## 2026-11-11 · 新增 poetry-tts 产线（书封诗句 + 豆包配音）
 
 - **变更**：
-  - 新产线 `line/poetry-tts/`：`build.json`、`film.skeleton.js`、`render.py`、`README.md`。
+  - 新产线 `line/poetry-tts/`：`build.json`、`film.skeleton.js`、`render.py`、`AGENTS.md`。
   - `render.py` 先逐场合成配音、测时长，再回写 `poem.json` 的 `seconds` 与 `gap`（`image_in` / `text1` / `credit` / `line_step`），然后拼 `build/narration.wav` + `build/timings.json`，最后交给 `dom-narrated` 渲染（timings 已存在，不会重算）。
   - `cine/video/dom/poetry.js` 支持 `gap.line_step`（多行走场间隔），默认 0.28。
   - `project.py` 的 `--line` 增加 `poetry-tts`；入口仍是 `python project.py build poetry-tts`。
@@ -148,7 +206,7 @@
   - `line/poetry/build.json` 移除 `drops*` 全部参数；`FX` 同步删除。
 - **原因**：水珠/水痕效果未达预期，用户决定去掉背景水滴特效。
 - **影响**：poetry 不再依赖 WebGL，渲染更快、码率更低；画面与「双场景 30 秒」版本一致，只是没有雨。
-- **相关文件**：`cine/video/dom/{poetry.js,core.js}`、`line/poetry/{build.json,README.md}`
+- **相关文件**：`cine/video/dom/{poetry.js,core.js}`、`line/poetry/{build.json,AGENTS.md}`
 
 ---
 
@@ -161,20 +219,20 @@
   - poetry 参数去掉 `drops_blur`，新增 `drops_spec`。
 - **原因**：纯 CSS 水珠只能做渐变贴图，无法真实扭曲背后的画面。
 - **影响**：poetry 的渲染依赖 WebGL；文字仍在 DOM，所以排版和字体不受影响。旧作品（没有 NO_POST 导出）由 `window.__NO_POST` 兼容。
-- **相关文件**：`cine/video/dom/{poetry.js,poetry-gl.js,core.js}`、`line/poetry/{build.json,README.md}`
+- **相关文件**：`cine/video/dom/{poetry.js,poetry-gl.js,core.js}`、`line/poetry/{build.json,AGENTS.md}`
 
 ---
 
 ## 2026-11-11 · 删除 4 条产线
 
 - **变更**：
-  - 删除 `line/{canvas-ai,dom-ai,rpg-qa,hybrid-ai}`（render.py / 骨架 / README 一并删除）。
+  - 删除 `line/{canvas-ai,dom-ai,rpg-qa,hybrid-ai}`（render.py / 骨架 / 文档一并删除）。
   - `project.py render --line` 只剩 `canvas-bgm` / `dom-narrated` / `poetry`；移除 `--generate-assets` 及对应分支。
   - `project.py list` 对 `line` 已不存在的旧作品标注「产线已删」。
   - `cine/image/ark.py`、`cine/video/dom/rpg-qa.js` 保留：它们是引擎/工具，不再有产线默认调用。
 - **原因**：实际只用 poetry；其余产线不再维护，减少索引和文档噪音。
 - **影响**：`moon-follow`、`moon-follow-rpg`、`qa-ai-pixel-demo` 不能再重渲，旧成片保留。
-- **相关文件**：`project.py`、`AGENTS.md`、`cine/image/README.md`、`cine/video/canvas/README.md`、`cine/video/dom/README.md`
+- **相关文件**：`project.py`、`AGENTS.md`、`cine/image/AGENTS.md`、`cine/video/canvas/AGENTS.md`、`cine/video/dom/AGENTS.md`
 
 ---
 
@@ -187,10 +245,10 @@
   - `line/poetry/render.py` 先从 `poem.json` 生成 `narration.json` 与 `timings.json`（静音时间轴），场景时长与成片时长只有一个来源；`--keep-narration` 可跳过。
   - 新增 `line/poetry/build.json`：poetry 的唯一输入文件（id / 素材路径 / 全部版式参数），支持 `//` 注释（按 JSONC 解析）；`python project.py build poetry` 读它建一个新项目（自动命名、复制素材、生成 `poem.json`），再渲染交付。
   - 调色板收进引擎：`jade / ember / moon / ink`；场景可用任意 palette 键覆盖（`text` / `halo` / `rain` 等）。
-  - 文档改为「跟着目录走」：每条 `line/<name>/README.md` 写用途 / 改哪个文件 / 参数 / 渲染命令；每个 `cine/` 子目录的 README 写职责 / 文件清单 / 调用方。`AGENTS.md` 只保留规则和索引。
-  - 不新增建项目的 CLI：新建作品仍是复制 line 骨架，人和 agent 的接口是目录 README + 内容文件。
+  - 文档改为「跟着目录走」：每条 `line/<name>/AGENTS.md` 写用途 / 改哪个文件 / 参数 / 渲染命令；每个 `cine/` 子目录的 AGENTS.md 写职责 / 文件清单 / 调用方。根 `AGENTS.md` 只保留规则和索引。
+  - 不新增建项目的 CLI：新建作品仍是复制 line 骨架，人和 agent 的接口是目录 AGENTS.md + 内容文件。
   - `projects/zhuxian-poem` 迁移为 `poem.json` 实例，`film.js` 改为通用 wrapper。
-- **原因**：换一首诗不该改代码；line 要像函数一样「传参即用」，新会话只看 README + poem.json 就能出片。
+- **原因**：换一首诗不该改代码；line 要像函数一样「传参即用」，新会话只看 AGENTS.md + poem.json 就能出片。
 - **影响**：
   - poetry 的出片入口：改 `line/poetry/build.json` → `python project.py build poetry`；每次生成一个新项目文件夹，旧片不动。
   - 项目里的 `poem.json` 是快照，`narration.json` 由它派生，都不要手改。
@@ -199,8 +257,8 @@
 - **迁移**：`zhuxian-poem` 已迁移并重新出帧验证（画面一致）。
 - **相关文件**：
   - `cine/video/dom/poetry.js`
-  - `workspaces/vibe-knowledge/line/poetry/{build.json,film.skeleton.js,render.py,README.md}`
-  - `line/<各产线>/README.md`、`cine/<各子目录>/README.md`
+  - `workspaces/vibe-knowledge/line/poetry/{build.json,film.skeleton.js,render.py,AGENTS.md}`
+  - `line/<各产线>/AGENTS.md`、`cine/<各子目录>/AGENTS.md`
 
 ---
 
@@ -261,7 +319,7 @@
 - **相关文件**：
   - `workspaces/vibe-knowledge/{ARCHITECTURE.md,cine/lib/*,cine/pipelines/*}`
   - `workspaces/vibe-knowledge/cine/tools/*`（wrapper / 引擎工具）
-  - `tools/vk.py`、`AGENTS.md`、`workspaces/vibe-knowledge/README.md`
+  - `tools/vk.py`、`AGENTS.md`、`workspaces/vibe-knowledge/AGENTS.md`
 
 ---
 
@@ -271,7 +329,7 @@
   - 新增 `workspaces/vibe-knowledge/cine/canvas/`：`engine.js`（Canvas → WebCodecs → Mediabunny → MP4）、`components.js`（`title / keyword / counter / bars / plate / foot / chapter / progress / spectrum / waves / sunset`）。
   - 新增 `cine/tools/render_canvas.py`：加载 `lessons/<lesson>/film.canvas.js`，启动静态服务器，浏览器内逐帧编码，写 `build/lesson<lesson>.mp4`，再 mux 默认 BGM。
   - `film.canvas.js` 契约：导出 `duration / fps / images / build(c)`；`build` 返回 `{from, to, draw(t, c)}` 镜头数组，`draw` 按绝对时间 `t` 画一帧。
-  - `canvas/vendor/mediabunny.js` 是 Mediabunny 0.x 的 ESM bundle（MPL-2.0，见同目录 README）。
+  - `canvas/vendor/mediabunny.js` 是 Mediabunny 0.x 的 ESM bundle（MPL-2.0，见同目录 AGENTS.md）。
   - 新增示例作品 `projects/sky-blue`（30s BGM-only，「天空为什么是蓝的」）。
 - **原因**：
   - 当前 `record.py` 每帧 `page.screenshot()` 37ms，瓶颈在截图/JPEG/回读；Canvas 直接编码可以完全绕开。
@@ -329,7 +387,7 @@
   - `workspaces/vibe-knowledge/cine/tools/{server.py,queue.py,deliver.py,record.py,clips.py,finish.py,stills.py}`
   - `workspaces/vibe-knowledge/tools/{new_project.py,check_timings.py,update_series.py,silent_timings.py}`
   - `skills/vibe-knowledge/tools/{qa.py,bgm_force.py,ark_media.py,fit_bgm.py}`
-  - `tools/video-studio/{app.py,run.sh}`、`AGENTS.md`、`workspaces/vibe-knowledge/README.md`
+  - `tools/video-studio/{app.py,run.sh}`、`AGENTS.md`、`workspaces/vibe-knowledge/AGENTS.md`
 
 ---
 

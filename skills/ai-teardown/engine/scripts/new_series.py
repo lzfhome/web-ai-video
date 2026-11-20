@@ -74,7 +74,7 @@ def main():
     images = []
     if a.style == "cine":
         pass
-    elif a.style == "sketch" and (PRESETS / "presenter/images.presenter.json").exists():   # 讲解小人形象自备（开源版不带作者形象），见 presets/README.md
+    elif a.style == "sketch" and (PRESETS / "presenter/images.presenter.json").exists():   # 讲解小人形象自备（开源版不带作者形象），见 presets/AGENTS.md
         for p in (PRESETS / "presenter").glob("*.png"):
             shutil.copy(p, sd / "assets/img" / p.name)
         images = json.loads((PRESETS / "presenter/images.presenter.json").read_text(encoding="utf-8"))["images"]

@@ -1515,7 +1515,7 @@ BLIP_PLAN = _blip_plan()
 CARD_PLAN = _card_plan()
 
 
-# 开场打字用真实按键录音（CC0，见 sfx/README.md），不再用合成的咔嗒声
+# 开场打字用真实按键录音（CC0，见 sfx/AGENTS.md），不再用合成的咔嗒声
 SFX_DIR = Path(__file__).resolve().parent.parent / "sfx"
 KEY_ORDER = [1, 4, 2, 7, 3, 5, 8, 6, 2, 4, 1, 3]
 

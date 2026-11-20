@@ -39,6 +39,13 @@ if hasattr(sys.stdout, "reconfigure"):
 AIWORK = Path(__file__).resolve().parent
 sys.path.insert(0, str(AIWORK))
 
+# 本地 ffmpeg 自动入 PATH：换一个 Agent 也不用手工设环境变量
+_ff_dirs = sorted((AIWORK / "tools/local/ffmpeg").glob("*/bin"))
+_ff_dir = next((d for d in reversed(_ff_dirs) if (d / "ffmpeg.exe").exists()), None)
+if _ff_dir and not os.environ.get("FFMPEG"):
+    os.environ["FFMPEG"] = str(_ff_dir / "ffmpeg.exe")
+    os.environ["PATH"] = str(_ff_dir) + os.pathsep + os.environ.get("PATH", "")
+
 from tools.lib.paths import CINE, project_fps, project_line  # noqa: E402
 
 PY = sys.executable
@@ -186,7 +193,26 @@ def cmd_build(a):
     spec = line_dir / "build.json"
     if not spec.exists():
         raise SystemExit(f"缺少输入文件：{spec}")
-    data = _load_jsonc(spec)
+
+    if getattr(a, "work", None):
+        import json as _json
+        sys.path.insert(0, str(line_dir))
+        from compose import compose as _compose
+        work = _json.loads(Path(a.work).read_text(encoding="utf-8"))
+        defaults = _json.loads((line_dir / "defaults.json").read_text(encoding="utf-8"))
+        data = _compose(work, defaults)
+        # 封面/BGM 允许相对 work.json 所在目录
+        work_dir = Path(a.work).resolve().parent
+        for sc in data.get("scenes", []):
+            p = sc.get("cover")
+            if p and not Path(p).is_absolute() and (work_dir / p).exists():
+                sc["cover"] = str((work_dir / p).resolve())
+        bg = data.get("bgm") or {}
+        p = bg.get("src")
+        if p and not Path(p).is_absolute() and (work_dir / p).exists():
+            bg["src"] = str((work_dir / p).resolve())
+    else:
+        data = _load_jsonc(spec)
 
     base = a.name or data.get("id") or a.line
     projects = ws / "projects"
@@ -198,10 +224,12 @@ def cmd_build(a):
     for sub in ("assets/img", "assets/audio", "build"):
         (ldir / sub).mkdir(parents=True, exist_ok=True)
 
-    film = line_dir / "film.skeleton.js"
-    if not film.exists():
-        raise SystemExit(f"缺骨架：{film}")
-    shutil.copy2(film, ldir / "film.js")
+    # poetry 的入口在 line/poetry/film.js，作品目录不再拷贝 film.js
+    if a.line != "poetry":
+        film = line_dir / "film.skeleton.js"
+        if not film.exists():
+            raise SystemExit(f"缺骨架：{film}")
+        shutil.copy2(film, ldir / "film.js")
 
     poem = dict(data)
     for k in ("fps", "poster", "name"):
@@ -224,6 +252,8 @@ def cmd_build(a):
 
     (ldir / "poem.json").write_text(
         json.dumps(poem, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if getattr(a, "work", None):
+        shutil.copy2(Path(a.work), ldir / "work.json")
 
     meta = {
         "title": poem["title"],
@@ -337,6 +367,7 @@ def main():
     p.add_argument("--workers", type=int, default=2)
     p.add_argument("--poster", type=float, default=7)
     p.add_argument("--no-render", action="store_true")
+    p.add_argument("--work", default=None, help="poetry 的 work.json；给了就忽略 build.json")
     p.set_defaults(func=cmd_build)
 
     p = sub.add_parser("render", help="按产物自己的 line 生成视频")

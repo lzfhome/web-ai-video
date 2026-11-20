@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""用户克隆音色的人声后期（voice-clone-test/README.md 定稿的那条链），在配音 + 变速之后跑。
+"""用户克隆音色的人声后期（voice-clone-test 定稿的那条链），在配音 + 变速之后跑。
 用法：python3 voice_post.py <lessons/NN>      原件留 build/narration.pre.wav，重复跑从原件算。"""
 import shutil, subprocess, sys
 from pathlib import Path

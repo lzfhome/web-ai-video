@@ -1,0 +1,40 @@
+{
+  "id": "new-work",
+  "title": "书名 · 两句话",
+  "book": {
+    "name": "书名",
+    "author": "作者",
+    "publisher": "出版社",
+    "volumes": ["第一册", "第二册"]
+  },
+  "bgm": "resources/music/替换成实际曲目.mp3",
+  "covers": [
+    "assets/cover-1.jpg",
+    "assets/cover-2.jpg"
+  ],
+  "bio": [
+    "作者小传第一段。",
+    "作者小传第二段。"
+  ],
+  "scenes": [
+    {
+      "lines": ["第一句，", "第二句。"],
+      "type": "dialogue",
+      "speaker": "人物名",
+      "source": "第X章 章节名",
+      "context": "谁对谁说、之前发生了什么、这一句的情绪。",
+      "marks": [
+        { "text": "第一句", "feel": "firm" }
+      ]
+    },
+    {
+      "lines": ["第三句，", "第四句。"],
+      "type": "narration",
+      "source": "第X章 章节名",
+      "context": "叙述视角、这一段在故事里的作用。",
+      "marks": [
+        { "text": "第四句", "feel": "slow" }
+      ]
+    }
+  ]
+}

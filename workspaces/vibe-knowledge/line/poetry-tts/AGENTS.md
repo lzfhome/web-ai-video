@@ -41,7 +41,7 @@ python project.py build poetry-tts
 旁白（包括描述某人心理的句子）用解说音色，直接引语才用角色本音。
 年龄、性别、语气都要对上，否则一听就假。
 
-其余字段（`cover` `lines` `palette` `type` `effects` `book` `bgm` `credit` `source` `header` `footer`）和 `poetry` 完全一样，见 `line/poetry/README.md`。
+其余字段（`cover` `lines` `palette` `type` `effects` `book` `bgm` `credit` `source` `header` `footer`）和 `poetry` 完全一样，见 `line/poetry/AGENTS.md`。
 
 ## 时长与节奏
 

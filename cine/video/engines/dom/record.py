@@ -51,7 +51,7 @@ def film_info(lesson, port):
     with sync_playwright() as p:
         b = launch(p)
         pg = b.new_page(viewport={"width": 1920, "height": 1080})
-        pg.goto(f"http://127.0.0.1:{port}/cine/index.html?lesson={lesson}&capture")
+        pg.goto(f"http://127.0.0.1:{port}/cine/index.html?lesson={lesson}&capture&v=20261115b")
         pg.wait_for_function("window.__film && window.__film.ready", timeout=180000)
         info = pg.evaluate("({from: __film.from, duration: __film.duration, blur: __film.blur})")
         b.close()
@@ -64,7 +64,7 @@ def render_range(lesson, port, crf, fps, shot_fmt, out, t0=None, t1=None, encode
         pg = b.new_page(viewport={"width": 1920, "height": 1080})
         errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
-        pg.goto(f"http://127.0.0.1:{port}/cine/index.html?lesson={lesson}&capture")
+        pg.goto(f"http://127.0.0.1:{port}/cine/index.html?lesson={lesson}&capture&v=20261115b")
         pg.wait_for_function("window.__film && window.__film.ready", timeout=180000)
         info = pg.evaluate("({from: __film.from, duration: __film.duration, blur: __film.blur})")
         t0 = float(info["from"] if t0 is None else t0)

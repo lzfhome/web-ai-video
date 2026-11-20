@@ -1,0 +1,29 @@
+{
+  "id": "smoke",
+  "title": "poetry 冒烟测试",
+  "book": {
+    "name": "测试书",
+    "author": "测试作者",
+    "publisher": "测试出版社",
+    "volumes": ["第一册", "第二册"]
+  },
+  "bgm": "resources/music/merry-christmas-mr-lawrence-piano.mp3",
+  "covers": ["assets/zx-1.jpg", "assets/zx-2.jpg"],
+  "bio": ["作者小传第一段。", "作者小传第二段。"],
+  "scenes": [
+    {
+      "lines": ["测试一句，", "第二句。"],
+      "type": "dialogue",
+      "speaker": "测试人物",
+      "source": "第一章 测试",
+      "context": "冒烟测试用，不需要情绪。",
+      "marks": [{ "text": "测试一句", "feel": "firm" }]
+    },
+    {
+      "lines": ["测试旁白。"],
+      "type": "narration",
+      "source": "第二章 测试",
+      "context": "冒烟测试用。"
+    }
+  ]
+}

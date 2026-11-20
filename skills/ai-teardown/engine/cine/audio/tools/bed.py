@@ -648,7 +648,7 @@ def sfx_rewind(L, c, k, plan):
 
 
 def sfx_key(L, c, k, plan):
-    """真实按键录音（CC0，sfx/README.md）：轮换 8 个变体，enter=True 用空格键录音当回车；按键的接触点对准 t。"""
+    """真实按键录音（CC0，sfx/AGENTS.md）：轮换 8 个变体，enter=True 用空格键录音当回车；按键的接触点对准 t。"""
     name = "key-space" if c.get("enter") else f"key-{S.KEY_ORDER[k % len(S.KEY_ORDER)]}"
     x, pk = S.real_key(name)
     return with_fx(S.stereo(x), room=0.12), c["t"] - max(0.0, pk - 0.002)

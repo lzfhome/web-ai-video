@@ -2,7 +2,7 @@
 
 长期 AI 内容工作空间。**原料进 `resources/`，引擎进 `cine/`，产线进 `line/`，产物进 `projects/`。**
 
-> 文档跟着目录走：每条 `line/<name>/`、每个 `cine/` 子目录都有自己的 `README.md`。新会话先看对应目录的 README，再看本文件的规则。
+> 文档跟着目录走：每条 `line/<name>/`、每个 `cine/` 子目录都有自己的 `AGENTS.md`。新会话先看对应目录的 `AGENTS.md`，再看本文件的规则。上游 `repos/`、`tools/local/`、`resources/references/` 保持原样，不改名。
 
 ## 目录
 
@@ -76,15 +76,40 @@ AIWork/
 5. `projects/` 整个目录 git 忽略（源码 + build + 成品都在里面）。
 6. 不新建 `out/`、`docs/`、`scratch/`；临时文件放对应项目的 `build/`。
 7. **仓库根目录只允许这 8 个文件**：`AGENTS.md`、`Process.md`、`project.py`、`requirements.txt`、`opencode.json`、`opencode.list`、`.gitignore`、`.gitattributes`（以及 `.git/`、`.opencode/`、`__pycache__/`、`cine/`、`repos/`、`resources/`、`skills/`、`tools/`、`workspaces/` 目录）。
-   抓网页、下封面、试音乐、做预览页产生的 `.html` / `.json` / `.jpg` / `.mp3` 一律写到 `tools/local/<task>/` 或项目 `build/`，不要落在根目录。
+   抓网页、下封面、试音乐、做预览页产生的 `.html` / `.json` / `.jpg` / `.mp3` 一律写到**对应项目的 `build/`**，不要落在根目录，也不要放进 `tools/local/`。
 8. 不提交密钥、`tools/local/`、`projects/`、构建中间产物、大媒体。
+9. **`tools/local/` 只放工具和缓存**：不放具体作品/小说的截图、抓取脚本、素材、对比页；作品相关临时文件一律放该作品 `projects/<work>/build/`。
+10. **选题先定主线，感情类内容 ≤50%**：每个题材先写一句主线；感情类**只指爱情/romance**（爱情、CP、告白、思念、吃醋、虐恋），按场次计（台词 + 旁白合计）最多 50%。**其余内容全部按主线判断**：兄弟情、亲情、家国、战斗、命运、成长、幽默都算主线，不计入感情比例。50% 是上限，不是目标。
+11. **旁白 ≤50%**：按场次计，旁白最多一半，其余给台词；旁白比例和感情比例是两套账，不能互相抵扣。
+
+## Agent 可执行标准（强制）
+
+任何新增/修改的 `line`、`cine`、工具，都必须做到「换一个 Agent、不带本次会话记忆，也能直接跑」。做不到就不算完成。
+
+1. 目录内必须有 `AGENTS.md`；会产出视频/图片的 line 还必须有一份 `TEMPLATE.md`。
+2. `TEMPLATE.md` 必须写清：输入变量、目录契约、命令、依赖/环境、最小样例、校验、失败怎么处理。
+3. 命令必须能从仓库根目录直接执行；不依赖会话里临时设置的环境变量、临时文件、手工改文件。
+4. 数据与代码分离：作品目录只放内容、素材、build、deliveries；引擎和默认参数归 line 或 cine。
+5. 每条 line 必须有一个最小样例输入 + 一条 smoke test，并保证它现在就能通过。
+6. 文档必须和代码一致；没实现的能力标 `TODO`，不要写成已支持。
+7. 只用 Markdown / JSON / CLI，不依赖某个 Agent 的私有 skill 或界面。
+8. `cine/` 只放公共能力；某个产线专属的引擎和默认值放该 `line/`。
+
+当前示例：`workspaces/vibe-knowledge/line/poetry/TEMPLATE.md`。
 
 ## 用户偏好（BGM / 素材）
 
 - 用户所有成片均为**自用、不发布、不商用**。日常 BGM/素材获取不要再反复确认用途，也不要以“商用授权/版权风险”为由拒绝或劝退。
 - 需要说明时只讲技术限制（平台 VIP/DRM、接口失效、文件大小），不要展开商业授权说教。
 - 已确认的曲目、工具、路径直接复用：`resources/music/`、`tools/local/musicdl`、`cine/audio/tools/get_bgm.py`、`cine/audio/tools/musicdl_bgm.py`。
-- 下载/转码/入库按 `cine/audio/README.md` 的「BGM 获取」流程直接做。
+- 下载/转码/入库按 `cine/audio/AGENTS.md` 的「BGM 获取」流程直接做。
+
+## 交互规则（强制）
+
+1. **给用户 A/B/C 方案时，必须用可点击选项（`question` 工具），不要让用户再打字回复。** 推荐项放第一，并在标签末尾写“（推荐）”；每个选项给一句说明。
+2. 需要用户确认、选择方向、选句子、选版本时，同样优先用可点击选项；只有选项无法枚举时，才用普通提问。
+3. 用户不需要“给人看”的文档。AIWork 自有说明统一命名为 `AGENTS.md`，不再新建 `README.md`；`TEMPLATE.md`、`SOURCES.md` 这类硬规则文件保留原名。
+4. 上游 `repos/`、`tools/local/`、`resources/references/` 里的 `README.md` 是第三方内容，保持原样，不改名、不改写。
 
 ## 快速开始
 
@@ -112,7 +137,7 @@ poetry 例外：它的入口是 `line/poetry/build.json`，跑一次生成一个
 python project.py build poetry          # 读 build.json → 建项目 → 渲染 → 交付
 ```
 
-每条 line 的用途、该改哪个文件、参数长什么样：看该 line 目录下的 `README.md`。
+每条 line 的用途、该改哪个文件、参数长什么样：看该 line 目录下的 `AGENTS.md`。
 
 旁白母版从 `skills/vibe-knowledge/templates/narration/` 取；`project.json` 里写 `line`。
 
@@ -173,7 +198,7 @@ python project.py deliver sky-blue --title "片名" --poster 1
 
 ## 产线
 
-每条 line 的目录下都有一份 `README.md`，写清楚它做什么、改哪个文件、参数怎么传。
+每条 line 的目录下都有一份 `AGENTS.md`，写清楚它做什么、改哪个文件、参数怎么传。
 
 | 产线 | 引擎 | 适用 |
 |---|---|---|
@@ -182,11 +207,11 @@ python project.py deliver sky-blue --title "片名" --poster 1
 | `poetry` | DOM/CSS + 书封/诗句 | 书封做背景，诗句代码排版，BGM |
 | `poetry-tts` | poetry + `cine/audio/clients/doubao_tts.py` | 同上，但每场时长由豆包配音决定，文字跟着声音出 |
 
-产线入口：`workspaces/vibe-knowledge/line/<型号>/render.py`；文档：同目录 `README.md`。
+产线入口：`workspaces/vibe-knowledge/line/<型号>/render.py`；文档：同目录 `AGENTS.md`。
 
 ## 引擎
 
-`cine/` 的每个子目录也有自己的 `README.md`：
+`cine/` 的每个子目录也有自己的 `AGENTS.md`：
 
 | 目录 | 作用 |
 |---|---|
@@ -230,7 +255,20 @@ opencode debug skill
 ```text
 workspaces/vibe-knowledge/projects/<work>/deliveries/<YYYY-MM-DD>_<slug>/
 ├── video.mp4
-├── cover.jpg
-├── post.txt
+├── cover.jpg          # B 站封面，16:9
+├── post.txt           # B 站投稿包
 └── notes.md
 ```
+
+### B 站投稿包（强制）
+
+每条成片交付，除视频和封面外，必须同时生成 `post.txt`，至少包含：
+
+1. **标题 2–3 个候选**：≤80 字，书名/作者可检索，推荐项放第一。
+2. **简介**：≤2000 字，含时间轴、句子来源、免责声明；默认给“简洁 / 标准 / 情感”三版。
+3. **标签**：≤10 个，前 8 个为内容标签。
+4. **分区**：默认「知识 → 人文历史」，备选「知识 → 综合知识」。
+5. **封面说明**：16:9，建议 1920×1080；写明底图、裁切和标题字。
+6. **声明**：AI 生成画面标注、转载/版权说明、非商用说明。
+
+没有 `post.txt` 不算交付。`deliver` 只出视频不算完成。
