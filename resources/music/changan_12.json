@@ -1,0 +1,27 @@
+{
+  "file": "changan_12.mp3",
+  "path": "D:\\AIWork\\resources\\music\\changan_12.mp3",
+  "title": "長安十二時辰",
+  "artist": "村松崇継",
+  "album": "道標",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=1403633007",
+  "source_id": "1403633007",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": null,
+  "acquired_at": "2026-11-17T07:28:49.162095+00:00",
+  "probe": {
+    "duration": 160.5,
+    "size": 6422444,
+    "bit_rate": 320121,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

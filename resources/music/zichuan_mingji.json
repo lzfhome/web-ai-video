@@ -1,0 +1,27 @@
+{
+  "file": "zichuan_mingji.mp3",
+  "path": "D:\\AIWork\\resources\\music\\zichuan_mingji.mp3",
+  "title": "紫川·铭记",
+  "artist": "陈雪燃",
+  "album": "《紫川·光明三杰》影视原声专辑",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=2130974473",
+  "source_id": "2130974473",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": null,
+  "acquired_at": "2026-11-17T07:23:54.389888+00:00",
+  "probe": {
+    "duration": 194.693854,
+    "size": 7790444,
+    "bit_rate": 320110,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

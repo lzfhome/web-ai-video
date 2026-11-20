@@ -1,0 +1,27 @@
+{
+  "file": "datang_glory.mp3",
+  "path": "D:\\AIWork\\resources\\music\\datang_glory.mp3",
+  "title": "荣耀梦幻版",
+  "artist": "小里多",
+  "album": "大唐荣耀配乐复刻",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=863179345",
+  "source_id": "863179345",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": null,
+  "acquired_at": "2026-11-17T07:29:38.453055+00:00",
+  "probe": {
+    "duration": 216.658396,
+    "size": 8668844,
+    "bit_rate": 320092,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

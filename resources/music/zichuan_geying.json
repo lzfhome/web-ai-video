@@ -1,0 +1,27 @@
+{
+  "file": "zichuan_geying.mp3",
+  "path": "D:\\AIWork\\resources\\music\\zichuan_geying.mp3",
+  "title": "紫川·歌舞升平",
+  "artist": "陈雪燃",
+  "album": "《紫川·光明三杰》影视原声专辑",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=2130976855",
+  "source_id": "2130976855",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": null,
+  "acquired_at": "2026-11-17T07:23:50.823804+00:00",
+  "probe": {
+    "duration": 152.307688,
+    "size": 6095084,
+    "bit_rate": 320145,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

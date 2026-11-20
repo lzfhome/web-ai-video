@@ -1,0 +1,27 @@
+{
+  "file": "qijian_warsong.mp3",
+  "path": "D:\\AIWork\\resources\\music\\qijian_warsong.mp3",
+  "title": "七剑战歌",
+  "artist": "川井宪次",
+  "album": "武侠音乐系列之豪气中天",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=29999478",
+  "source_id": "29999478",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": null,
+  "acquired_at": "2026-11-17T07:26:39.722805+00:00",
+  "probe": {
+    "duration": 364.573333,
+    "size": 14585324,
+    "bit_rate": 320052,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

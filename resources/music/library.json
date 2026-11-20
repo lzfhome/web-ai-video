@@ -1,5 +1,86 @@
 [
   {
+    "file": "changan_12.mp3",
+    "path": "D:\\AIWork\\resources\\music\\changan_12.mp3",
+    "title": "長安十二時辰",
+    "artist": "村松崇継",
+    "album": "道標",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=1403633007",
+    "source_id": "1403633007",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:28:49.162095+00:00",
+    "probe": {
+      "duration": 160.5,
+      "size": 6422444,
+      "bit_rate": 320121,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "damgong_tea.mp3",
+    "path": "D:\\AIWork\\resources\\music\\damgong_tea.mp3",
+    "title": "一曲茶炉暖色",
+    "artist": "林海",
+    "album": "大明宫词 影视音乐原声大碟",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=109898",
+    "source_id": "109898",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:32:19.919947+00:00",
+    "probe": {
+      "duration": 132.96,
+      "size": 5320364,
+      "bit_rate": 320118,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "datang_glory.mp3",
+    "path": "D:\\AIWork\\resources\\music\\datang_glory.mp3",
+    "title": "荣耀梦幻版",
+    "artist": "小里多",
+    "album": "大唐荣耀配乐复刻",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=863179345",
+    "source_id": "863179345",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:29:38.453055+00:00",
+    "probe": {
+      "duration": 216.658396,
+      "size": 8668844,
+      "bit_rate": 320092,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
     "file": "dust-fireflies_yijiu.mp3",
     "path": "D:\\AIWork\\resources\\music\\dust-fireflies_yijiu.mp3",
     "title": "尘埃与流萤",
@@ -16,6 +97,60 @@
       "duration": 273.466354,
       "size": 10941164,
       "bit_rate": 320073,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "gobi_beacon.mp3",
+    "path": "D:\\AIWork\\resources\\music\\gobi_beacon.mp3",
+    "title": "戈壁烽火 (古代战争)",
+    "artist": "海明 MING",
+    "album": "原创电影配乐",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=3366025893",
+    "source_id": "3366025893",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:27:31.159824+00:00",
+    "probe": {
+      "duration": 176.437333,
+      "size": 7059884,
+      "bit_rate": 320108,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "gudai_war_desolate.mp3",
+    "path": "D:\\AIWork\\resources\\music\\gudai_war_desolate.mp3",
+    "title": "古代战争荒凉沧桑配乐",
+    "artist": "猴子音悦",
+    "album": "古代战争荒凉沧桑配乐",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=2738249842",
+    "source_id": "2738249842",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:25:23.206702+00:00",
+    "probe": {
+      "duration": 134.124375,
+      "size": 5367404,
+      "bit_rate": 320144,
       "codec": "mp3",
       "sample_rate": 48000,
       "channels": 2,
@@ -54,6 +189,114 @@
     }
   },
   {
+    "file": "kangxi_war.mp3",
+    "path": "D:\\AIWork\\resources\\music\\kangxi_war.mp3",
+    "title": "康熙王朝大战",
+    "artist": "倪轮月",
+    "album": "影视配乐自制",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=1861153947",
+    "source_id": "1861153947",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:31:01.182418+00:00",
+    "probe": {
+      "duration": 80.000042,
+      "size": 3202604,
+      "bit_rate": 320260,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "langya_beizhuang.mp3",
+    "path": "D:\\AIWork\\resources\\music\\langya_beizhuang.mp3",
+    "title": "悲壮",
+    "artist": "孟可 / 吕亮",
+    "album": "琅琊榜之风起长林 电视剧原声带配乐专辑",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=528478526",
+    "source_id": "528478526",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:25:46.881919+00:00",
+    "probe": {
+      "duration": 174.615104,
+      "size": 6986924,
+      "bit_rate": 320106,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "qijian_warsong.mp3",
+    "path": "D:\\AIWork\\resources\\music\\qijian_warsong.mp3",
+    "title": "七剑战歌",
+    "artist": "川井宪次",
+    "album": "武侠音乐系列之豪气中天",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=29999478",
+    "source_id": "29999478",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:26:39.722805+00:00",
+    "probe": {
+      "duration": 364.573333,
+      "size": 14585324,
+      "bit_rate": 320052,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "qin_empire.mp3",
+    "path": "D:\\AIWork\\resources\\music\\qin_empire.mp3",
+    "title": "大秦帝国",
+    "artist": "吴欣叡",
+    "album": "剑咏轩辕",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=32548474",
+    "source_id": "32548474",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:31:05.041382+00:00",
+    "probe": {
+      "duration": 85.45525,
+      "size": 3420524,
+      "bit_rate": 320216,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
     "file": "rainy-blue_fanwan.mp3",
     "path": "D:\\AIWork\\resources\\music\\rainy-blue_fanwan.mp3",
     "title": "Rainy Blue (蓝色阴雨)",
@@ -81,6 +324,33 @@
     }
   },
   {
+    "file": "sanguo_hero_dawn.mp3",
+    "path": "D:\\AIWork\\resources\\music\\sanguo_hero_dawn.mp3",
+    "title": "英雄的黎明",
+    "artist": "横山菁儿",
+    "album": "三国志·第一部~英雄たちの夜明け",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=29999472",
+    "source_id": "29999472",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:26:33.726238+00:00",
+    "probe": {
+      "duration": 216.120979,
+      "size": 8647724,
+      "bit_rate": 320106,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
     "file": "summer-nostalgia_moreanp.mp3",
     "path": "D:\\AIWork\\resources\\music\\summer-nostalgia_moreanp.mp3",
     "title": "忆夏思乡",
@@ -97,6 +367,114 @@
       "duration": 263.379354,
       "size": 10537964,
       "bit_rate": 320084,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "zichuan_axiu.mp3",
+    "path": "D:\\AIWork\\resources\\music\\zichuan_axiu.mp3",
+    "title": "阿秀",
+    "artist": "陈雪燃",
+    "album": "《紫川·光明三杰》影视原声专辑",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=2130976863",
+    "source_id": "2130976863",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:24:28.607718+00:00",
+    "probe": {
+      "duration": 216.176458,
+      "size": 8649644,
+      "bit_rate": 320095,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "zichuan_geying.mp3",
+    "path": "D:\\AIWork\\resources\\music\\zichuan_geying.mp3",
+    "title": "紫川·歌舞升平",
+    "artist": "陈雪燃",
+    "album": "《紫川·光明三杰》影视原声专辑",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=2130976855",
+    "source_id": "2130976855",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:23:50.823804+00:00",
+    "probe": {
+      "duration": 152.307688,
+      "size": 6095084,
+      "bit_rate": 320145,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "zichuan_mingji.mp3",
+    "path": "D:\\AIWork\\resources\\music\\zichuan_mingji.mp3",
+    "title": "紫川·铭记",
+    "artist": "陈雪燃",
+    "album": "《紫川·光明三杰》影视原声专辑",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=2130974473",
+    "source_id": "2130974473",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:23:54.389888+00:00",
+    "probe": {
+      "duration": 194.693854,
+      "size": 7790444,
+      "bit_rate": 320110,
+      "codec": "mp3",
+      "sample_rate": 48000,
+      "channels": 2,
+      "tags": {
+        "title": null,
+        "artist": null,
+        "album": null
+      }
+    }
+  },
+  {
+    "file": "zichuan_mingxin.mp3",
+    "path": "D:\\AIWork\\resources\\music\\zichuan_mingxin.mp3",
+    "title": "紫川·铭心",
+    "artist": "陈雪燃",
+    "album": "《紫川·光明三杰》影视原声专辑",
+    "source": "netease-musicdl",
+    "source_url": "https://music.163.com/song?id=2130974487",
+    "source_id": "2130974487",
+    "license": "unknown",
+    "usage": "self-use",
+    "lossless_file": null,
+    "acquired_at": "2026-11-17T07:21:11.049499+00:00",
+    "probe": {
+      "duration": 133.2,
+      "size": 5329964,
+      "bit_rate": 320117,
       "codec": "mp3",
       "sample_rate": 48000,
       "channels": 2,

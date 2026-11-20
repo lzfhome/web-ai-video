@@ -1,0 +1,27 @@
+{
+  "file": "zichuan_mingxin.mp3",
+  "path": "D:\\AIWork\\resources\\music\\zichuan_mingxin.mp3",
+  "title": "紫川·铭心",
+  "artist": "陈雪燃",
+  "album": "《紫川·光明三杰》影视原声专辑",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=2130974487",
+  "source_id": "2130974487",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": null,
+  "acquired_at": "2026-11-17T07:21:11.049499+00:00",
+  "probe": {
+    "duration": 133.2,
+    "size": 5329964,
+    "bit_rate": 320117,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

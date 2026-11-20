@@ -1,0 +1,27 @@
+{
+  "file": "kangxi_war.mp3",
+  "path": "D:\\AIWork\\resources\\music\\kangxi_war.mp3",
+  "title": "康熙王朝大战",
+  "artist": "倪轮月",
+  "album": "影视配乐自制",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=1861153947",
+  "source_id": "1861153947",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": null,
+  "acquired_at": "2026-11-17T07:31:01.182418+00:00",
+  "probe": {
+    "duration": 80.000042,
+    "size": 3202604,
+    "bit_rate": 320260,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

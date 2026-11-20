@@ -1,0 +1,27 @@
+{
+  "file": "langya_beizhuang.mp3",
+  "path": "D:\\AIWork\\resources\\music\\langya_beizhuang.mp3",
+  "title": "悲壮",
+  "artist": "孟可 / 吕亮",
+  "album": "琅琊榜之风起长林 电视剧原声带配乐专辑",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=528478526",
+  "source_id": "528478526",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": null,
+  "acquired_at": "2026-11-17T07:25:46.881919+00:00",
+  "probe": {
+    "duration": 174.615104,
+    "size": 6986924,
+    "bit_rate": 320106,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

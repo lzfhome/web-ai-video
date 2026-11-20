@@ -1,0 +1,27 @@
+{
+  "file": "zichuan_axiu.mp3",
+  "path": "D:\\AIWork\\resources\\music\\zichuan_axiu.mp3",
+  "title": "阿秀",
+  "artist": "陈雪燃",
+  "album": "《紫川·光明三杰》影视原声专辑",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=2130976863",
+  "source_id": "2130976863",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": null,
+  "acquired_at": "2026-11-17T07:24:28.607718+00:00",
+  "probe": {
+    "duration": 216.176458,
+    "size": 8649644,
+    "bit_rate": 320095,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

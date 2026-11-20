@@ -1,0 +1,27 @@
+{
+  "file": "gobi_beacon.mp3",
+  "path": "D:\\AIWork\\resources\\music\\gobi_beacon.mp3",
+  "title": "戈壁烽火 (古代战争)",
+  "artist": "海明 MING",
+  "album": "原创电影配乐",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=3366025893",
+  "source_id": "3366025893",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": null,
+  "acquired_at": "2026-11-17T07:27:31.159824+00:00",
+  "probe": {
+    "duration": 176.437333,
+    "size": 7059884,
+    "bit_rate": 320108,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}

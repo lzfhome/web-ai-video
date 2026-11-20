@@ -1,0 +1,27 @@
+{
+  "file": "sanguo_hero_dawn.mp3",
+  "path": "D:\\AIWork\\resources\\music\\sanguo_hero_dawn.mp3",
+  "title": "英雄的黎明",
+  "artist": "横山菁儿",
+  "album": "三国志·第一部~英雄たちの夜明け",
+  "source": "netease-musicdl",
+  "source_url": "https://music.163.com/song?id=29999472",
+  "source_id": "29999472",
+  "license": "unknown",
+  "usage": "self-use",
+  "lossless_file": null,
+  "acquired_at": "2026-11-17T07:26:33.726238+00:00",
+  "probe": {
+    "duration": 216.120979,
+    "size": 8647724,
+    "bit_rate": 320106,
+    "codec": "mp3",
+    "sample_rate": 48000,
+    "channels": 2,
+    "tags": {
+      "title": null,
+      "artist": null,
+      "album": null
+    }
+  }
+}
