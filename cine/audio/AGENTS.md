@@ -134,7 +134,7 @@ Invoke-WebRequest "https://music.163.com/song/media/outer/url?id=<id>.mp3" `
 - 只对 `fee=8` 的免费低音质曲有效；VIP/版权曲会失败或返回错误页。
 - 这是 128kbps 试听版，仅自用；发布/商用要授权。
 
-### 入库与混音
+### 入库与混音（本地素材库）
 
 - 临时下载放 `resources/music/_incoming/`，确认后移到 `resources/music/`。
 - 更新 `resources/music/AGENTS.md`：原曲、作者、时长、码率、来源、许可/用途。

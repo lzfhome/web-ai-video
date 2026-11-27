@@ -41,7 +41,7 @@
 - 原因：两台机器各自生成，生成物不需要跨机器同步；git 只同步框架和文本。
 - 影响：`deliver` 的产物也在 `build/` 下，可随时清理；A 需要按 `resources/fonts/SOURCES.md` 等自行准备媒体。
 - 迁移：旧 `deliveries/` 由 `tools/clean_generated.py --yes` 一并删除；旧成片不再保留。
-- 相关 commit / files：`tools/clean_generated.py`、`cine/video/engines/deliver.py`、`project.py`、`.gitignore`。
+- 相关 commit / files：`tools/clean_generated.py`、`cine/video/engines/deliver.py`、`project.py`、`.gitignore`、`AGENTS.md`、`cine/video/AGENTS.md`。
 
 ## 2026-11-25 · 新增 fe-gba 产线（GBA 火纹镜头）
 

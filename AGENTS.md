@@ -14,7 +14,7 @@ AIWork/
 ├── opencode.json             # skills.paths 指向 ./skills
 ├── skills/                   # 方法论、提示词、Skill 文档
 ├── repos/                    # 开源项目/参考源码（已 vendor）
-├── resources/                # 全车间共享原料
+├── resources/                # 全车间共享原料（媒体本地，文本清单入库）
 │   ├── fonts/
 │   ├── music/
 │   ├── sfx/
@@ -61,14 +61,7 @@ AIWork/
 
 ## 当前作品
 
-- **天空为什么是蓝的？**（`canvas-bgm`）：`workspaces/vibe-knowledge/projects/sky-blue/`
-- **本福特定律**（`dom-narrated`）：`workspaces/vibe-knowledge/projects/benford/`
-- **山月记**（`dom-narrated`）：`workspaces/vibe-knowledge/projects/sangetsuki/`
-  - 文字压图连续版：`lessons/006-text-on-image/`
-  - 混合静帧版：`lessons/004-hybrid-stills/`
-  - 混合 Seedance 版：`lessons/005-hybrid-seedance/`
-  - 默片字卡版：`lessons/003-silent-79s/`
-  - 水墨纸本版：`lessons/002-paper/`
+作品都在 `workspaces/vibe-knowledge/projects/`，整目录不进 git；用 `python project.py list` 查看当前项目和产线。
 
 ## 核心规则
 
@@ -76,7 +69,7 @@ AIWork/
 2. `resources/` 是唯一原料池；不要再往 skill / cine 里复制字体、BGM、风格图。
 3. `cine/` 只放合成能力，不放某个作品的业务脚本。
 4. `line/` 只放产线型号；新的产品流程加在这里。
-5. `projects/` 整个目录 git 忽略（源码 + build + 成品都在里面）。
+5. `projects/` 整个目录 git 忽略（源码 + 素材 + build，成品在 `build/deliver`）。
 6. 不新建 `out/`、`docs/`、`scratch/`；临时文件放对应项目的 `build/`。
 7. **仓库根目录只允许这 8 个文件**：`AGENTS.md`、`Process.md`、`project.py`、`requirements.txt`、`opencode.json`、`opencode.list`、`.gitignore`、`.gitattributes`（以及 `.git/`、`.opencode/`、`__pycache__/`、`cine/`、`learning/`、`learning-downloads/`、`repos/`、`resources/`、`skills/`、`tools/`、`workspaces/` 目录）。
    抓网页、下封面、试音乐、做预览页产生的 `.html` / `.json` / `.jpg` / `.mp3` 一律写到**对应项目的 `build/`**，不要落在根目录，也不要放进 `tools/local/`。
@@ -105,7 +98,7 @@ AIWork/
 - 用户所有成片均为**自用、不发布、不商用**。日常 BGM/素材获取不要再反复确认用途，也不要以“商用授权/版权风险”为由拒绝或劝退。
 - 需要说明时只讲技术限制（平台 VIP/DRM、接口失效、文件大小），不要展开商业授权说教。
 - 已确认的曲目、工具、路径直接复用：`resources/music/`、`tools/local/musicdl`、`cine/audio/tools/get_bgm.py`、`cine/audio/tools/musicdl_bgm.py`。
-- 下载/转码/入库按 `cine/audio/AGENTS.md` 的「BGM 获取」流程直接做。
+- 下载/转码/放进 `resources/music/` 按 `cine/audio/AGENTS.md` 的「BGM 获取」流程直接做。
 
 ## 交互规则（强制）
 
