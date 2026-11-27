@@ -1,4 +1,4 @@
-﻿# ===== 作品产物（源码 + build + deliveries，全部不进 git） =====
+# ===== 作品产物（源码 + build + deliveries，全部不进 git） =====
 workspaces/vibe-knowledge/projects/
 
 # ===== 构建/中间产物 =====
@@ -23,7 +23,6 @@ workspaces/vibe-knowledge/projects/
 # ===== video-studio 本地数据 =====
 tools/video-studio/data/
 tools/video-studio/*.bak.json
-tools/video-studio/config.example.json
 
 # ===== 上游仓库：保留源码，跳过重媒体 =====
 repos/**/*.mp4
@@ -34,7 +33,6 @@ repos/**/*.gif
 
 # ===== 参考资料里的重媒体（要版本化请用 Git LFS） =====
 resources/references/bilibili/
-resources/references/fight-skill-text/
 resources/references/slash-skills-subscription-main/
 resources/references/wengao-skill/
 resources/references/**/*.mp4
@@ -57,22 +55,44 @@ resources/references/**/*.zip
 resources/references/**/*.rar
 resources/references/**/*.7z
 
-# ===== 大体积字体：LXGW 只留本地（ai-teardown 用；缺了会回退系统楷体） =====
-skills/ai-teardown/engine/assets/fonts/LXGWWenKai-*.ttf
-
-# ===== 大体积音乐源文件（FLAC 只留本地；入库只留 MP3） =====
+# ===== 产线素材：字体/音乐/音效/风格预览/图片只留本地，不进 git =====
+resources/fonts/**/*.ttf
+resources/fonts/**/*.otf
+resources/music/**/*.mp3
+resources/music/**/*.m4a
 resources/music/**/*.flac
+resources/music/**/*.wav
+resources/music/**/*.ogg
 resources/music/_incoming/
+resources/sfx/**/*.mp3
+resources/sfx/**/*.m4a
+resources/sfx/**/*.wav
+resources/styles/**/*.jpg
+resources/styles/**/*.jpeg
+resources/styles/**/*.png
+resources/styles/**/*.webp
+resources/styles/**/*.gif
+resources/images/**/*.jpg
+resources/images/**/*.jpeg
+resources/images/**/*.png
+resources/images/**/*.webp
+resources/images/**/*.gif
+resources/voice/**/*.wav
+resources/voice/**/*.mp3
+skills/**/assets/fonts/*.ttf
+skills/**/assets/fonts/*.otf
+# 素材清单：resources/fonts/SOURCES.md、resources/music/AGENTS.md、resources/sfx/AGENTS.md
 
 # ===== 队列锁 / 引擎临时输出 =====
 **/.queue.lock
-cine/audio/generated/
 
 # 本会话下载的 Node/ffmpeg/benchmark 工具链，放仓库内但不入库
 tools/local/
 
-# ===== 本地教程包：只忽略体积大的教程，其余学习笔记正常入库 =====
-learning/**/闲鱼教程/
+# ===== 下载的大容量学习资料：统一放 learning-downloads/，整目录不进 git =====
+learning-downloads/
+# 兜底：误放在 learning/ 里的下载包
+learning/**/AI-*/
 
 # ===== 系统 =====
 .DS_Store

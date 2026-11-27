@@ -30,6 +30,8 @@ AIWork/
 │   ├── image/                # Ark / Seedream / Seedance 素材引擎
 │   ├── media/                # B 站视频/音频下载（yutto）
 │   └── vendor/               # three.js 等引擎依赖
+├── learning/                 # 自己的学习笔记（md）
+├── learning-downloads/       # 下载的大容量学习资料，git 忽略
 ├── workspaces/
 │   └── vibe-knowledge/       # 知识短片车间
 │       ├── line/             # 产线型号
@@ -76,7 +78,7 @@ AIWork/
 4. `line/` 只放产线型号；新的产品流程加在这里。
 5. `projects/` 整个目录 git 忽略（源码 + build + 成品都在里面）。
 6. 不新建 `out/`、`docs/`、`scratch/`；临时文件放对应项目的 `build/`。
-7. **仓库根目录只允许这 8 个文件**：`AGENTS.md`、`Process.md`、`project.py`、`requirements.txt`、`opencode.json`、`opencode.list`、`.gitignore`、`.gitattributes`（以及 `.git/`、`.opencode/`、`__pycache__/`、`cine/`、`repos/`、`resources/`、`skills/`、`tools/`、`workspaces/` 目录）。
+7. **仓库根目录只允许这 8 个文件**：`AGENTS.md`、`Process.md`、`project.py`、`requirements.txt`、`opencode.json`、`opencode.list`、`.gitignore`、`.gitattributes`（以及 `.git/`、`.opencode/`、`__pycache__/`、`cine/`、`learning/`、`learning-downloads/`、`repos/`、`resources/`、`skills/`、`tools/`、`workspaces/` 目录）。
    抓网页、下封面、试音乐、做预览页产生的 `.html` / `.json` / `.jpg` / `.mp3` 一律写到**对应项目的 `build/`**，不要落在根目录，也不要放进 `tools/local/`。
 8. 不提交密钥、`tools/local/`、`projects/`、构建中间产物、大媒体。
 9. **`tools/local/` 只放工具和缓存**：不放具体作品/小说的截图、抓取脚本、素材、对比页；作品相关临时文件一律放该作品 `projects/<work>/build/`。
@@ -228,6 +230,8 @@ python project.py deliver sky-blue --title "片名" --poster 1
 ## 素材
 
 - 共享字体/音乐/音效/风格/音色/参考：`resources/`。
+- **`resources/` 的字体、音乐、音效、风格预览图、图片只留本地，不进 git**；A 按各目录的 `AGENTS.md` / `SOURCES.md` 重新准备。
+- **下载的大容量学习资料统一放 `learning-downloads/`**（按主题建子目录），整目录不进 git；`learning/` 其他位置只放自己整理的 md 笔记。
 - B 站参考视频：`python cine/media/engines/bilibili.py download BV...`，默认落 `resources/references/bilibili/<BV>/`（视频 + `cover.jpg` + `meta.json`）；未登录只有 480P，1080P+ 先跑 `login` 扫码。
 - 作品专属素材：`projects/<work>/lessons/<lesson>/assets/`。
 - AI 生成图/视频：`python cine/image/engines/ark.py image|video|assets ...`，默认 dry-run，确认后加 `--yes`。
