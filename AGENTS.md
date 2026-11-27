@@ -253,9 +253,22 @@ opencode debug skill
 
 ## Git
 
-- `workspaces/vibe-knowledge/projects/`、`resources/` 中的重媒体、`tools/local/`、`**/build/`、`**/stills/`、venv、node_modules、密钥全部忽略。
-- 大媒体放 `projects/` 或 `resources/`；上游 `repos/` 和 `resources/references/` 的重媒体默认忽略，需要版本化用 Git LFS。
+- 仓库只跟踪框架代码、文本/清单和最小 fixture；`projects/`、`resources/` 媒体、`tools/local/`、`**/build/`、`**/stills/`、venv、node_modules、密钥全部忽略。
+- `resources/` 只保留 `styles/catalog.json`、`INDEX.md`、`**/STYLE.md`、`_samples/*.js`、`music/*.json`、`fonts/SOURCES.md`、`sfx/**/*.md`；字体、音频、图片、视频、下载包只留本地。
+- `resources/references/` 的重媒体和下载包默认忽略；需要版本化用 Git LFS。
 - 不主动 commit；用户明确要求再提交。
+
+### A/B 同步边界（2026-11-27）
+
+B 已按“只同步文本和框架”整理，A pull 后按下面执行：
+
+1. `.gitignore` 已入库；A 不要本地改写。pull 前先 `git diff -- .gitignore`，有本地改动先 `git checkout -- .gitignore`。
+2. `resources/` 媒体（字体、BGM、音效、风格预览图、图片、voice）不再跟踪；A 旧 clone pull 时这些文件会从工作区删除，**pull 前先备份到仓库外**。
+3. A 按 `resources/fonts/SOURCES.md`、`resources/music/AGENTS.md`、`resources/sfx/AGENTS.md`、`resources/styles/INDEX.md` 重新准备媒体。
+4. `deliveries/` 已废弃；`deliver.py` 输出到 `build/deliver/`，生成物统一在 `build/`。
+5. A pull 后跑一次 `python tools/clean_generated.py --yes`，清掉旧的 `build/`、`deliveries/`、`stills/`、`frames/`；它会保留 `assets/` 和文本。
+6. 不要 `git add -f` 媒体文件；`.gitignore` 会拦截。
+7. `.git` 历史里仍有旧媒体，首次 clone 仍约 183 MB；要 clone 变小需另做历史重写。
 
 ## 成品命名
 
