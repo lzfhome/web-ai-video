@@ -31,8 +31,8 @@ sys.path.insert(0, str(AIWORK))
 from cine.image.lib import ark_client as ark  # noqa: E402
 
 if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(errors="replace")
-    sys.stderr.reconfigure(errors="replace")
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 SKILL = AIWORK / "skills/vibe-knowledge"
 DEFAULT_VIDEO = ark.DEFAULT_VIDEO
