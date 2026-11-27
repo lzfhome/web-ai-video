@@ -1,6 +1,6 @@
 # poetry 实例索引（2026-11-18）
 
-> 给新 Agent 看的“照着做”清单。八个题材已统一到 **work.json 状态**；`deliveries/` 已清空，旧片不再保留。
+> 给新 Agent 看的“照着做”清单。八个题材已统一到 **work.json 状态**；`build/` 已清空，旧片不再保留。
 > 规则看 `../TEMPLATE.md` 和 `../SOURCES.md`；这里只记“实际怎么落的”。
 
 ## 一览
@@ -92,4 +92,4 @@ python project.py deliver <slug> --title "<片名>" --poster 9
 2. `work.json` 的 `covers` / `bgm` 不带 `assets/` 前缀；
 3. 6–7 行的场写了 `type_size`；
 4. 章节行没有“卷”；
-5. 项目里没有旧 `mp4`，`deliveries/` 是空的。
+5. 项目里没有旧 `mp4`，`build/` 是空的。

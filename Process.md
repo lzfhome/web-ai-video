@@ -32,6 +32,17 @@
 
 ---
 
+## 2026-11-27 · 生成物统一放 build，素材与渲染分离
+
+- 变更：
+  - `deliver.py` 默认输出从 `projects/<work>/deliveries/` 改为 `projects/<work>/build/deliver/`；`deliveries/` 不再作为固定目录。
+  - 新增 `tools/clean_generated.py`：只保留 `assets/` 和文本，删除 `build/`、`deliveries/`、`stills/`、`frames/`；`build/text|research|source` 会先移到同级 `assets/`。
+  - `resources/` 只保留文本/清单入库（`styles/catalog.json`、`STYLE.md`、`music/*.json`、`fonts/SOURCES.md`、`sfx/**/*.md`），字体、音频、图片、视频和下载包全部只留本地。
+- 原因：两台机器各自生成，生成物不需要跨机器同步；git 只同步框架和文本。
+- 影响：`deliver` 的产物也在 `build/` 下，可随时清理；A 需要按 `resources/fonts/SOURCES.md` 等自行准备媒体。
+- 迁移：旧 `deliveries/` 由 `tools/clean_generated.py --yes` 一并删除；旧成片不再保留。
+- 相关 commit / files：`tools/clean_generated.py`、`cine/video/engines/deliver.py`、`project.py`、`.gitignore`。
+
 ## 2026-11-25 · 新增 fe-gba 产线（GBA 火纹镜头）
 
 - **变更**：

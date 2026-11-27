@@ -39,7 +39,7 @@ AIWork/
 │       │   ├── dom-narrated/ # DOM + 旁白 + BGM
 │       │   ├── poetry/       # 书封决定背景 + 诗句卡片 + BGM
 │       │   └── poetry-tts/   # 同上 + 豆包配音（时长跟着配音走）
-│       └── projects/         # 产物（源码 + build + deliveries），不进 git
+│       └── projects/         # 源码 + assets + build（生成物只放 build），不进 git
 └── tools/                    # 本地工具 / 共享基础设施
     ├── lib/                  # paths / ffmpeg / browser / server / scaffold
     ├── doctor.py
@@ -56,7 +56,7 @@ AIWork/
 | 原料 | `resources/` | 字体、音乐、音效、风格、参考，所有车间共用 |
 | 引擎 | `cine/audio` `cine/video` `cine/image` `cine/media` | 可复用的合成 / 取素材能力 |
 | 产线 | `workspaces/<产品>/line/<型号>/` | 选引擎、定流程，直接生产 |
-| 产物 | `workspaces/<产品>/projects/<work>/` | 源码、素材、build、deliveries，整目录不进 git |
+| 产物 | `workspaces/<产品>/projects/<work>/` | 源码、素材、build（生成物只放 build），整目录不进 git |
 | 工具 | `tools/` | CLI、本地应用、工具链 |
 
 ## 当前作品
@@ -92,7 +92,7 @@ AIWork/
 1. 目录内必须有 `AGENTS.md`；会产出视频/图片的 line 还必须有一份 `TEMPLATE.md`。
 2. `TEMPLATE.md` 必须写清：输入变量、目录契约、命令、依赖/环境、最小样例、校验、失败怎么处理。
 3. 命令必须能从仓库根目录直接执行；不依赖会话里临时设置的环境变量、临时文件、手工改文件。
-4. 数据与代码分离：作品目录只放内容、素材、build、deliveries；引擎和默认参数归 line 或 cine。
+4. 数据与代码分离：作品目录只放内容、素材、build（生成物只放 build）；引擎和默认参数归 line 或 cine。
 5. 每条 line 必须有一个最小样例输入 + 一条 smoke test，并保证它现在就能通过。
 6. 文档必须和代码一致；没实现的能力标 `TODO`，不要写成已支持。
 7. 只用 Markdown / JSON / CLI，不依赖某个 Agent 的私有 skill 或界面。
@@ -121,6 +121,7 @@ python project.py list
 python tools/doctor.py
 python tools/smoke_test.py     # 3 秒端到端冒烟，成功后自动清理
 python tools/prune_tmp.py      # 查看 projects 里可清理多少；加 --yes 执行
+python tools/clean_generated.py  # 只留素材和文本，预览可删的 build（含 deliver）；加 --yes 执行
 ```
 
 新建作品就是复制产线骨架（**line 就是模板**）：
@@ -155,10 +156,8 @@ workspaces/vibe-knowledge/projects/my-film/
 │   ├── film.js          # dom-narrated
 │   ├── poem.json        # poetry（版式/调色板/特效/时长）
 │   ├── facts.md
-│   ├── assets/
-│   ├── build/           # 中间产物
-│   └── stills/          # 接触表
-└── deliveries/          # 成品
+│   ├── assets/          # 素材（输入，长期保留）
+│   └── build/           # 生成物（中间片、stills、deliver，可随时删）
 ```
 
 渲染：
@@ -229,8 +228,8 @@ python project.py deliver sky-blue --title "片名" --poster 1
 
 ## 素材
 
-- 共享字体/音乐/音效/风格/音色/参考：`resources/`。
-- **`resources/` 的字体、音乐、音效、风格预览图、图片只留本地，不进 git**；A 按各目录的 `AGENTS.md` / `SOURCES.md` 重新准备。
+- 共享字体/音乐/音效/风格/音色/参考：`resources/`（本地）。
+- **`resources/` 只把文本/清单入库**：`styles/catalog.json`、`INDEX.md`、`**/STYLE.md`、`_samples/*.js`、`music/*.json`、`fonts/SOURCES.md`、`sfx/**/*.md`；字体、音频、图片、视频和下载包全部只留本地，A 按这些清单自行准备。
 - **下载的大容量学习资料统一放 `learning-downloads/`**（按主题建子目录），整目录不进 git；`learning/` 其他位置只放自己整理的 md 笔记。
 - B 站参考视频：`python cine/media/engines/bilibili.py download BV...`，默认落 `resources/references/bilibili/<BV>/`（视频 + `cover.jpg` + `meta.json`）；未登录只有 480P，1080P+ 先跑 `login` 扫码。
 - 作品专属素材：`projects/<work>/lessons/<lesson>/assets/`。
@@ -261,7 +260,7 @@ opencode debug skill
 ## 成品命名
 
 ```text
-workspaces/vibe-knowledge/projects/<work>/deliveries/<YYYY-MM-DD>_<slug>/
+workspaces/vibe-knowledge/projects/<work>/build/deliver/<YYYY-MM-DD>_<slug>/
 ├── video.mp4
 ├── cover.jpg          # B 站封面，16:9
 ├── post.txt           # B 站投稿包

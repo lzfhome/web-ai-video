@@ -11,7 +11,7 @@ permission:
 - `style`：风格 key，例如 `paper`、`darkmath`、`rpg`
 - `project`：项目根，例如 `workspaces/vibe-knowledge/projects/style-demos`
 - `port`：本次专用 HTTP 端口，例如 `8971`
-- `output`：输出目录，例如 `workspaces/vibe-knowledge/projects/style-demos/deliveries/2026-11-05_paper`
+- `output`：输出目录，例如 `workspaces/vibe-knowledge/projects/style-demos/build/deliver/2026-11-05_paper`
 
 ## 规则
 

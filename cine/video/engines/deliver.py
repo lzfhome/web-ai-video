@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""出片后交付：<project>/deliveries/<日期>_<版本>/{video.mp4, cover.jpg, post.txt, notes.md}。
+"""出片后收进 build/deliver：<project>/build/deliver/<日期>_<版本>/{video.mp4, cover.jpg, post.txt, notes.md}。
 
 用法：
   CINE_ROOT=workspaces/vibe-knowledge/projects/my-film python cine/video/engines/deliver.py <课号> --title "片名" --poster 12
-  ... deliver.py <课号> --title "片名" --out deliveries/2026-11-10_v1
+  ... deliver.py <课号> --title "片名" --out build/deliver/2026-11-10_v1
   默认 video.mp4 直接 copy 视频流（不二次压缩）；要压分享版加 --reencode，要网页版加 --web。
 """
 import json
@@ -44,7 +44,7 @@ def main():
         pj = ROOT / "project.json"
         data = json.loads(pj.read_text(encoding="utf-8")) if pj.exists() else {}
         version = data.get("version") or "final"
-        out = ROOT / "deliveries" / f"{date.today().isoformat()}_{version}"
+        out = ROOT / "build" / "deliver" / f"{date.today().isoformat()}_{version}"
     out = out.resolve()
     out.mkdir(parents=True, exist_ok=True)
 

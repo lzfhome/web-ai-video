@@ -20,10 +20,10 @@
 |---|---|---|
 | 定稿 | `selection-*.md` | 句子、章名、封面、顺序定了；不是渲染输入 |
 | work.json | `<lesson>/work.json` | 渲染器输入；定稿必须落到这里 |
-| 成片 | `deliveries/` | 渲染 + 交付后才存在 |
+| 成片 | `build/deliver/` | 渲染 + 交付后才存在 |
 
 - 只有 selection md 不算做完；必须写 `work.json`。
-- 删掉 `deliveries/` 后，项目回到 work.json 状态；不要拿旧片当新定稿。
+- 删掉 `build/` 后，项目回到 work.json 状态；不要拿旧片当新定稿。
 - 更新已有项目不要反复 `project.py build --name <同名>`：`_unique_dir` 会生成 `-v2/-v3`。用 `compose.py` 覆盖 canonical 的 `poem.json`，或先确认输出目录。
 
 ## 目录
@@ -77,7 +77,7 @@ python workspaces/vibe-knowledge/line/poetry/compose.py workspaces/vibe-knowledg
 5. **说话人必须来自原文**，查不到就标旁白，不要硬安名字。
 6. **指定回避的人物不得出现**（例如本书明确不要沧月）。
 7. **章节行与封面解耦**：`source` 写“第X章 章名”（序章写“序章 章名”），章名来自文本源，不写“第X卷”；不再要求这句出自当前封面那一册。句子按故事顺序从头到尾排，封面按册序 1→N 播，两条线并行、不互相证明。`compose.py` 会校验 `source` 含“第X章”或“序章”，只写册名直接报错。
-8. **章节行按诛仙版式**：显示在署名下方，跟在台词之后出现，一行“第X章 章名”；字号 18，不要放大成标题，也不要拆成“册名 + 章名”两行。参照成品：`projects/zhuxian-eight/deliveries/2026-11-15_v2/video.mp4`。
+8. **章节行按诛仙版式**：显示在署名下方，跟在台词之后出现，一行“第X章 章名”；字号 18，不要放大成标题，也不要拆成“册名 + 章名”两行。参照诛仙项目 `projects/zhuxian-eight/`（旧成片已删，按 work.json 重渲染）。
 9. **`bio` 是作者小传，不是剧情简介**：每段写作者的生平、写作经历、作品谱系；至少一半场次是长段（≥40 字），其余可以短。**不要写本场人物、本场情节或小说内容**；`footer4` 显示的就是这段（前面加 `生平：`）。
 10. **中心句先看读者热度，再回原文**：按 [`SOURCES.md`](SOURCES.md) 的源和硬规则选句，**默认只用免登录渠道**；至少两个来源指向同一句、同一人物或同一场面。查不到就写明“无平台热度数据”，不要编造。平台热度只用来选句，章节必须回到最早实体版目录核对。
 11. **台词场只写台词**：不要写“某某道：”“某某叹道：”“某某沉默片刻……”这类前置；署名靠下方 `——人物`，正文只留引号里的内容。**旁白场只写旁白**，不署名、不加引号，不要为了凑人物把旁白伪装成台词。
@@ -135,7 +135,7 @@ notes 里汇总：
 
 - 值写在 `defaults.json` 的 `timing.after`；`poem.json` 会同步一份，渲染时以 `poem.json` 为准。
 - 实际时长由 `render.py` 写进 `build/timings.json`；**改完时间必须先看 timings.json 的数字**，浏览器会缓存 `poetry.js`，别拿旧片子当新版。
-- 参考成片：`projects/piaomiao-seven/deliveries/`（7 场 109.8s，B01 16.35s、B07 26.35s）。
+- 参考节奏：`projects/piaomiao-seven/` 的 work.json（7 场 109.8s，B01 16.35s、B07 26.35s）。
 
 ## 选句与分册（2026-11-15 定稿）
 
@@ -297,7 +297,7 @@ notes 里汇总：
 
 ## 当前项目状态（2026-11-18）
 
-八个题材已统一到 work.json 状态；`deliveries/` 已清空，旧片不再保留。
+八个题材已统一到 work.json 状态；`build/` 已清空，旧片不再保留。
 
 | 题材 | 项目 | 场数 | 备注 |
 |---|---|---:|---|
@@ -310,7 +310,7 @@ notes 里汇总：
 | 灵飞经 | `lingfeijing-five` | 5 | 山海三部曲之一 |
 | 紫川 | `zichuan-nine` | 9 | 2005 百花洲 8 册封面，TXT 单源 |
 
-要看成片，先 `python project.py render <slug> --line poetry`；旧片已删除，不要再引用 `deliveries/2026-11-*`。
+要看成片，先 `python project.py render <slug> --line poetry`；旧片已删除，不要再引用旧 `deliveries/` 路径。
 
 ## 步骤
 
@@ -370,7 +370,7 @@ notes 里汇总：
 
 - [ ] `covers` 长度 ≥ `scenes`；每场有 cover；封面不足时按册序重复，不留空册
 - [ ] 句子和章名来自同一文本源；跨版差异已列给用户
-- [ ] 项目里有最终 `work.json` + `poem.json`；`deliveries/` 为空或与定稿一致
+- [ ] 项目里有最终 `work.json` + `poem.json`；`build/` 只含当前生成物或为空
 - [ ] 中心句有热度依据（平台划线/段评 + 社区讨论），不是只凭印象
 - [ ] **`bio` 写的是作者生平，不是剧情摘要**
 - [ ] **底部册数后带册名**（原书有册名时，如“第2册 鬼域之旅”；没有就只写“第X册”，不许编）

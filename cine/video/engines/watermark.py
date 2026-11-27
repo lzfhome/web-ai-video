@@ -5,7 +5,7 @@
 
 用法：
   python cine/video/engines/watermark.py video.mp4 --text "B站@__小凡__"
-  python cine/video/engines/watermark.py deliveries --text "B站@__小凡__" --recursive --yes
+  python cine/video/engines/watermark.py build/deliver --text "B站@__小凡__" --recursive --yes
   python cine/video/engines/watermark.py video.mp4 --text "B站@__小凡__" --inplace --yes
 
 默认输出：<原名>_wm.mp4；--inplace 先备份 .bak 再替换原文件。

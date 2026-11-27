@@ -41,7 +41,7 @@ vendor/   第三方运行时（three.js）
 - 固化脚本：`python cine/audio/tools/get_bgm.py search|download|netease|adopt|library`，输出 JSON，agent 直接调用。
 - 网易云专用：`musicdl` 已装在 `tools/local/musicdl`，封装 `python cine/audio/tools/musicdl_bgm.py search|download`，可下 FLAC + 320k MP3。
 - 网络先直连；超时/重置时用 `socks5://127.0.0.1:1080`，或按 `AGENTS.md` 用用户提供的代理。
-- BGM 文件放 `resources/music/`，不要放 `cine/`；入库时更新 `resources/music/AGENTS.md`。
+- BGM 文件放 `resources/music/`，不要放 `cine/`；`resources/` 的音频只留本地，更新本目录 `AGENTS.md` 的曲目表即可。
 
 ## B 站素材
 

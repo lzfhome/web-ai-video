@@ -1,4 +1,4 @@
-# ===== 作品产物（源码 + build + deliveries，全部不进 git） =====
+# ===== 作品产物（源码 + build，全部不进 git） =====
 workspaces/vibe-knowledge/projects/
 
 # ===== 构建/中间产物 =====
@@ -32,57 +32,43 @@ repos/**/*.m4a
 repos/**/*.gif
 repos/**/samples/*.png
 
-# ===== 参考资料里的重媒体（要版本化请用 Git LFS） =====
+# ===== resources：只保留文本/清单，媒体全部只留本地 =====
+# 不整目录忽略：catalog.json / INDEX.md / STYLE.md / *.json sidecar / SOURCES.md 仍入库。
+resources/**/*.mp3
+resources/**/*.m4a
+resources/**/*.flac
+resources/**/*.wav
+resources/**/*.ogg
+resources/**/*.ttf
+resources/**/*.otf
+resources/**/*.woff
+resources/**/*.woff2
+resources/**/*.jpg
+resources/**/*.jpeg
+resources/**/*.png
+resources/**/*.webp
+resources/**/*.gif
+resources/**/*.mp4
+resources/**/*.mov
+resources/**/*.mkv
+resources/**/*.doc
+resources/**/*.docx
+resources/**/*.pdf
+resources/**/*.ppt
+resources/**/*.pptx
+resources/**/*.xls
+resources/**/*.xlsx
+resources/**/*.zip
+resources/**/*.rar
+resources/**/*.7z
+resources/music/_incoming/
 resources/references/bilibili/
 resources/references/slash-skills-subscription-main/
 resources/references/wengao-skill/
-resources/references/**/*.mp4
-resources/references/**/*.mov
-resources/references/**/*.wav
-resources/references/**/*.m4a
-resources/references/**/*.png
-resources/references/**/*.jpg
-resources/references/**/*.jpeg
-resources/references/**/*.webp
-resources/references/**/*.gif
-resources/references/**/*.doc
-resources/references/**/*.docx
-resources/references/**/*.pdf
-resources/references/**/*.ppt
-resources/references/**/*.pptx
-resources/references/**/*.xls
-resources/references/**/*.xlsx
-resources/references/**/*.zip
-resources/references/**/*.rar
-resources/references/**/*.7z
 
-# ===== 产线素材：字体/音乐/音效/风格预览/图片只留本地，不进 git =====
-resources/fonts/**/*.ttf
-resources/fonts/**/*.otf
-resources/music/**/*.mp3
-resources/music/**/*.m4a
-resources/music/**/*.flac
-resources/music/**/*.wav
-resources/music/**/*.ogg
-resources/music/_incoming/
-resources/sfx/**/*.mp3
-resources/sfx/**/*.m4a
-resources/sfx/**/*.wav
-resources/styles/**/*.jpg
-resources/styles/**/*.jpeg
-resources/styles/**/*.png
-resources/styles/**/*.webp
-resources/styles/**/*.gif
-resources/images/**/*.jpg
-resources/images/**/*.jpeg
-resources/images/**/*.png
-resources/images/**/*.webp
-resources/images/**/*.gif
-resources/voice/**/*.wav
-resources/voice/**/*.mp3
+# skills 内的字体同样只留本地
 skills/**/assets/fonts/*.ttf
 skills/**/assets/fonts/*.otf
-# 素材清单：resources/fonts/SOURCES.md、resources/music/AGENTS.md、resources/sfx/AGENTS.md
 
 # ===== 队列锁 / 引擎临时输出 =====
 **/.queue.lock

@@ -6,7 +6,7 @@ project 只是产物，不是档案。这里不读/展示项目说明，只做�
   - lines    看当前支持哪些产线和模板骨架
   - build    读 line/<line>/build.json，新建项目并出片
   - render   按产物自己的 line 生成视频
-  - deliver  把成片收进 deliveries/
+  - deliver  把成片收进 build/deliver/
   - qa       看成片质检
 
 用法：
@@ -61,7 +61,7 @@ def iter_projects():
         if not root.is_dir():
             continue
         for project in sorted(p for p in root.iterdir() if p.is_dir()):
-            if (project / "lessons").is_dir() or (project / "deliveries").is_dir():
+            if (project / "lessons").is_dir() or (project / "build" / "deliver").is_dir():
                 yield ws, project
 
 
@@ -100,8 +100,8 @@ def run(script: Path, args: list, cwd: Path | None = None, env: dict | None = No
 def cmd_list(_a):
     rows = []
     for ws, project in iter_projects():
-        deliveries = project / "deliveries"
-        outputs = sorted(p.name for p in deliveries.iterdir() if p.is_dir()) if deliveries.is_dir() else []
+        deliver = project / "build" / "deliver"
+        outputs = sorted(p.name for p in deliver.iterdir() if p.is_dir()) if deliver.is_dir() else []
         rows.append((ws.name, project.name, project_line(project) or "?", outputs))
     if not rows:
         print("还没有产物。")
@@ -283,7 +283,7 @@ def cmd_build(a):
     run(ws / "line" / a.line / "render.py", [lesson, "--workers", a.workers], cwd=project, env=env)
     run(CINE / "video/engines/deliver.py",
         [lesson, "--title", poem["title"], "--poster", a.poster], cwd=project, env=env)
-    print(f"\n完成：{project / 'deliveries'}")
+    print(f"\n完成：{project / 'build' / 'deliver'}")
 
 
 def cmd_render(a):
@@ -414,7 +414,7 @@ def main():
     p.add_argument("--no-bgm", action="store_true")
     p.set_defaults(func=cmd_render)
 
-    p = sub.add_parser("deliver", help="把成片收进 deliveries/")
+    p = sub.add_parser("deliver", help="把成片收进 build/deliver/")
     p.add_argument("project")
     p.add_argument("--lesson", default=None)
     p.add_argument("--title", default=None)

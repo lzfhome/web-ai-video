@@ -28,7 +28,7 @@ from tools.lib.scaffold import create_project  # noqa: E402
 SLUG = f"smoke-{os.getpid()}"
 PROJECT = AIWORK / "workspaces/vibe-knowledge/projects" / SLUG
 LESSON = PROJECT / "lessons" / SLUG
-DELIVERY = PROJECT / "deliveries" / "smoke"
+DELIVERY = PROJECT / "build" / "deliver" / "smoke"
 
 
 def run(name, cmd, env=None):

@@ -32,7 +32,7 @@
    - 硬规则不能让：原文不改、不跨册、不编热度、不用弱句凑数。
 10. **章节无法确认就不写章节**：`source` 可以留空，只保留册名/册号；但必须能确认这句在该册内，并在 `context`/notes 标“仅册级核对”。不能为了好看编一个章节。
 11. **一个项目只用一个文本源**：句子、章名同源；平台热度只用于选句。定稿源没有章名就留空，不跨版补；两版有差异先列给用户选。
-12. **定稿 ≠ work.json ≠ 成片**：selection md 是定稿记录，work.json 才是渲染输入；删掉 `deliveries/` 后项目回到 work.json 状态。更新已有项目不要反复 `build --name <同名>`，会生成 `-v2/-v3`；用 `compose.py` 覆盖 canonical 的 `poem.json`。
+12. **定稿 ≠ work.json ≠ 成片**：selection md 是定稿记录，work.json 才是渲染输入；删掉 `build/` 后项目回到 work.json 状态。更新已有项目不要反复 `build --name <同名>`，会生成 `-v2/-v3`；用 `compose.py` 覆盖 canonical 的 `poem.json`。
 
 ## 开题流程（先候选，后确认）
 
@@ -74,12 +74,12 @@ projects/<slug>/
 ├── project.json          # line: poetry
 ├── lessons/<slug>/
 │   ├── poem.json         # compose 生成
-│   ├── assets/           # 封面、BGM
-│   └── build/
-└── deliveries/
+│   ├── assets/           # 封面、BGM（素材，长期保留）
+│   └── build/            # 生成物（可随时删）
+└── build/deliver/        # 交付包（可选，也在 build 下）
 ```
 
-交付时 `deliveries/<date>_<slug>/` 必须同时有 `video.mp4`、`cover.jpg`、`post.txt`（B 站投稿包：标题候选/简介/标签/分区/封面说明/AI 声明）；只出视频不算交付。
+交付时 `build/deliver/<date>_<slug>/` 必须同时有 `video.mp4`、`cover.jpg`、`post.txt`（B 站投稿包：标题候选/简介/标签/分区/封面说明/AI 声明）；只出视频不算交付。`build/` 随时可以用 `python tools/clean_generated.py --yes` 清掉。
 
 作品目录**没有** `film.js`、没有引擎代码；入口在 `workspaces/vibe-knowledge/line/poetry/film.js`。
 
