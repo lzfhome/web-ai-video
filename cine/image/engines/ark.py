@@ -39,13 +39,14 @@ DEFAULT_VIDEO = ark.DEFAULT_VIDEO
 DEFAULT_IMAGE = ark.DEFAULT_IMAGE
 
 
-def plan(title, payload, out):
+def plan(title, payload, out, yes=False):
     print(f"\n== {title} ==")
     print(json.dumps({k: v for k, v in payload.items() if k != "content"}, ensure_ascii=False, indent=1))
     if "content" in payload:
         print("content:", json.dumps(payload["content"], ensure_ascii=False)[:600])
     print("out:", out)
-    print("（dry-run：未提交；确认后加 --yes）\n")
+    print("（--yes：已提交）" if yes else "（dry-run：未提交；确认后加 --yes）")
+    print()
 
 
 def gen_image(args):
@@ -59,7 +60,7 @@ def gen_image(args):
     }
     if args.reference:
         payload["image"] = [ark.data_url(Path(p)) if Path(p).exists() else p for p in args.reference]
-    plan("Seedream 图片", payload, out)
+    plan("Seedream 图片", payload, out, yes=args.yes)
     if not args.yes:
         return
     items = ark.generate_images(payload)
@@ -82,26 +83,57 @@ def gen_image(args):
 
 def gen_video(args):
     out = Path(args.out)
+    model = args.model or DEFAULT_VIDEO
+    allowed_res = {
+        "doubao-seedance-2-5-flash-261115": {"480p", "720p"},
+        "doubao-seedance-2-0-mini-260615": {"480p", "720p"},
+        "doubao-seedance-2-0-fast-260128": {"480p", "720p"},
+    }.get(model)
+    if allowed_res and args.resolution not in allowed_res:
+        sys.exit(f"{model} 不支持 {args.resolution}；可选：{', '.join(sorted(allowed_res))}")
+
     content = [{"type": "text", "text": args.prompt}]
+    if args.first_frame and args.reference:
+        sys.exit("首帧图和参考图不能同时传：Seedance 的首帧/首尾帧与全模态参考是互斥场景")
+    if args.last_frame and args.reference:
+        sys.exit("尾帧图和参考图不能同时传：Seedance 的首帧/首尾帧与全模态参考是互斥场景")
     if args.first_frame:
         fp = Path(args.first_frame)
         if args.yes and not fp.exists():
             sys.exit(f"首帧不存在：{fp}")
         url = ark.data_url(fp) if (args.yes and fp.exists()) else f"<file:{fp}>"
         content.append({"type": "image_url", "image_url": {"url": url}, "role": "first_frame"})
+    if args.last_frame:
+        if not args.first_frame:
+            sys.exit("首尾帧模式需要同时给 --first-frame 和 --last-frame")
+        lp = Path(args.last_frame)
+        if args.yes and not lp.exists():
+            sys.exit(f"尾帧不存在：{lp}")
+        url = ark.data_url(lp) if (args.yes and lp.exists()) else f"<file:{lp}>"
+        content.append({"type": "image_url", "image_url": {"url": url}, "role": "last_frame"})
+    for ref in args.reference or []:
+        rp = Path(ref)
+        if args.yes and not rp.exists():
+            sys.exit(f"参考图不存在：{rp}")
+        url = ark.data_url(rp) if (args.yes and rp.exists()) else f"<file:{rp}>"
+        content.append({"type": "image_url", "image_url": {"url": url}, "role": "reference_image"})
+    # Seedance 2.5 系列的首帧/首尾帧任务只支持 ratio=adaptive
+    ratio = "adaptive" if ((args.first_frame or args.last_frame) and model.startswith("doubao-seedance-2-5")) else args.ratio
     payload = {
-        "model": args.model or DEFAULT_VIDEO,
+        "model": model,
         "content": content,
         "resolution": args.resolution,
-        "ratio": args.ratio,
+        "ratio": ratio,
         "duration": args.duration,
         "seed": args.seed,
         "camera_fixed": bool(args.camera_fixed),
         "watermark": False,
         "generate_audio": bool(args.generate_audio),
-        "omni_reference_task_type": "auto",
     }
-    plan("Seedance 视频", payload, out)
+    # 该参数只属于 Seedance 2.5 的全模态参考；首帧/首尾帧和文生视频传了会 400
+    if args.reference and not args.first_frame and not args.last_frame and model.startswith("doubao-seedance-2-5"):
+        payload["omni_reference_task_type"] = "auto"
+    plan("Seedance 视频", payload, out, yes=args.yes)
     if not args.yes:
         return
     tid = ark.create_video_task(payload)
@@ -134,6 +166,8 @@ def run_assets(args):
         ns.out = str(base / item["out"]) if not Path(item["out"]).is_absolute() else item["out"]
         if item.get("first_frame") and not Path(item["first_frame"]).is_absolute():
             ns.first_frame = str(base / item["first_frame"])
+        if item.get("last_frame") and not Path(item["last_frame"]).is_absolute():
+            ns.last_frame = str(base / item["last_frame"])
         if item.get("reference"):
             ns.reference = [str(base / r) if not Path(r).is_absolute() else r for r in item["reference"]]
         if item.get("kind") == "image":
@@ -161,6 +195,9 @@ def main():
             p.add_argument("--reference", action="append", default=None)
         else:
             p.add_argument("--first-frame", default=None)
+            p.add_argument("--last-frame", default=None, help="尾帧；与 --first-frame 一起组成首尾帧模式")
+            p.add_argument("--reference", action="append", default=None,
+                           help="参考图，可重复；与 --first-frame 互斥（Seedance 2.5 全模态参考）")
             p.add_argument("--resolution", default="720p", choices=["480p", "720p", "1080p", "4k"])
             p.add_argument("--ratio", default="16:9")
             p.add_argument("--duration", type=int, default=5)

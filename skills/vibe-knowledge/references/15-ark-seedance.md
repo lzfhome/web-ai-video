@@ -20,12 +20,15 @@
 
 | 用途 | 模型 | 说明 |
 |---|---|---|
-| 图片（便宜） | `doubao-seedream-5-0-260128` | Seedream 5.0 lite，2K/4K，适合场景、氛围、静帧 |
-| 图片（最强） | `doubao-seedream-5-0-pro-260628` | 细节更好，贵一些 |
-| 视频（测试/性价比） | `doubao-seedance-2-0-mini-260615` | 480p/720p，4–15s，适合试镜头 |
-| 视频（快速） | `doubao-seedance-2-0-fast-260128` | 480p/720p，首尾帧/参考图 |
-| 视频（专业） | `doubao-seedance-2-0-260128` | 最高 4K，参考视频/音频、延长 |
-| 视频（长叙事） | `doubao-seedance-2-5-260628` | 最高 1080p、30s/段 |
+| 图片（最新/透明素材） | `doubao-seedream-5-5-261028` | Seedream 5.5，2K，原生 RGBA，图层拆分 ≤99 |
+| 图片（最强画质） | `doubao-seedream-5-0-pro-260628` | Seedream 5.0 pro，2K，图层拆分 ≤16 |
+| 图片（快速/性价比） | `doubao-seedream-5-0-flash-260915` | Seedream 5.0 flash，2K，图层拆分 ≤16 |
+| 图片（组图/4K） | `doubao-seedream-4-0-20260415` | Seedream 4.0，2K/4K，组图 ≤15、参考图 2-14 |
+| 图片（旧版/组图） | `doubao-seedream-5-0-260128` | 旧版 5.0 lite，2K/4K，组图 ≤15 |
+| 视频（快速/性价比） | `doubao-seedance-2-5-flash-261115` | 480p/720p，4–30s，全模态参考 20 素材 |
+| 视频（专业/长叙事） | `doubao-seedance-2-5-260628` | 最高 4K，4–30s，全模态参考 50 素材 |
+| 视频（旧版测试） | `doubao-seedance-2-0-mini-260615` | 480p/720p，4–15s |
+| 视频（旧版专业） | `doubao-seedance-2-0-260128` | 最高 4K，参考视频/音频、延长 |
 
 视频默认 `generate_audio=false`，不生成人声/音效；需要环境声时加 `--generate-audio`。
 
@@ -60,7 +63,7 @@ python3 skills/vibe-knowledge/tools/ark_media.py video \
     {
       "id": "a01",
       "kind": "image",
-      "model": "doubao-seedream-5-0-260128",
+      "model": "doubao-seedream-5-5-261028",
       "prompt": "ink wash tiger in moonlight, sepia, silent film, no text",
       "size": "2K",
       "out": "assets/img/a01.jpg"
@@ -68,7 +71,7 @@ python3 skills/vibe-knowledge/tools/ark_media.py video \
     {
       "id": "v01",
       "kind": "video",
-      "model": "doubao-seedance-2-0-mini-260615",
+      "model": "doubao-seedance-2-5-flash-261115",
       "prompt": "tiger breathes, mist drifts, slow push-in",
       "first_frame": "assets/img/a01.jpg",
       "resolution": "720p",

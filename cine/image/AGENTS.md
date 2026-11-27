@@ -22,6 +22,15 @@ Ark 素材生成：Seedream（图）/ Seedance（视频）。
 - `ARK_BASE_URL`
 - `VIDEO_STUDIO_DIR`
 
+默认模型（2026-11 更新）：
+
+| 类型 | Model ID |
+|---|---|
+| 图片 | `doubao-seedream-5-5-261028` |
+| 视频 | `doubao-seedance-2-5-flash-261115` |
+
+用 `--model` 覆盖。其他可用：`doubao-seedream-5-0-pro-260628`、`doubao-seedream-5-0-flash-260915`、`doubao-seedream-4-0-20260415`、`doubao-seedance-2-5-260628`。
+
 ## 用法
 
 ```powershell
@@ -34,6 +43,11 @@ python cine/image/engines/ark.py image ... --yes
 
 # 批量：assets_ark.json 的 items[]，每条 kind=image/video
 python cine/image/engines/ark.py assets lessons/003/assets_ark.json --yes
+
+# 视频参考图（可重复；与 --first-frame 互斥）
+python cine/image/engines/ark.py video --prompt "..." \
+  --reference assets/ref-1.jpg --reference assets/ref-2.jpg \
+  --duration 5 --resolution 720p --out lessons/003/assets/clips/v02.mp4
 ```
 
 ## 约定

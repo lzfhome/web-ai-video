@@ -16,8 +16,8 @@ from pathlib import Path
 AIWORK = Path(__file__).resolve().parents[3]
 VS = Path(os.environ.get("VIDEO_STUDIO_DIR") or AIWORK / "tools/video-studio").expanduser().resolve()
 
-DEFAULT_VIDEO = "doubao-seedance-2-0-mini-260615"
-DEFAULT_IMAGE = "doubao-seedream-5-0-260128"
+DEFAULT_VIDEO = "doubao-seedance-2-5-flash-261115"
+DEFAULT_IMAGE = "doubao-seedream-5-5-261028"
 
 _API_KEY: str | None = None
 _BASE: str | None = None
