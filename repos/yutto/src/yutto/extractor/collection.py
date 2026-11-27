@@ -1,0 +1,114 @@
+from __future__ import annotations
+
+import asyncio
+import re
+from typing import TYPE_CHECKING
+
+from yutto.api.collection import get_collection_details
+from yutto.api.space import get_user_name
+from yutto.core.operation import ReportLevel, emit_download_report
+from yutto.extractor._abc import BatchExtractor
+from yutto.extractor.common import make_ugc_video_episode
+from yutto.extractor.outcome import ResolveOutcome
+from yutto.extractor.utils.batch import resolve_ugc_video_lists
+from yutto.input_parser import parse_episodes_selection
+from yutto.types import MId, SeriesId
+
+if TYPE_CHECKING:
+    from yutto.api.ugc_video import UgcVideoList
+    from yutto.core.execution import ExecutionScope
+    from yutto.extractor._abc import EpisodeListedCallback, ExtractorResolveOutcome
+    from yutto.extractor.utils.batch import IndexedResolveItem
+    from yutto.types import ExtractorOptions, ResolvableEpisode
+
+
+class CollectionExtractor(BatchExtractor):
+    """视频合集"""
+
+    REGEX_COLLECTION_LISTS = re.compile(
+        r"https?://space\.bilibili\.com/(?P<mid>\d+)/lists/(?P<series_id>\d+)\?type=season"
+    )
+    # 订阅合集后，在个人空间的收藏夹页面
+    REGEX_COLLECTION_FAV_PAGE: re.Pattern[str] = re.compile(
+        r"https?://space\.bilibili\.com/(?P<mid>\d+)/favlist\?fid=(?P<series_id>\d+)&ftype=collect"
+    )
+
+    mid: MId
+    series_id: SeriesId
+
+    def match(self, url: str) -> bool:
+        if (match_obj := self.REGEX_COLLECTION_LISTS.match(url)) or (
+            match_obj := self.REGEX_COLLECTION_FAV_PAGE.match(url)
+        ):
+            self.mid = MId(match_obj.group("mid"))
+            self.series_id = SeriesId(match_obj.group("series_id"))
+            return True
+        else:
+            return False
+
+    async def extract(
+        self,
+        scope: ExecutionScope,
+        options: ExtractorOptions,
+        *,
+        on_item: EpisodeListedCallback | None = None,
+    ) -> ExtractorResolveOutcome:
+        username, collection_details = await asyncio.gather(
+            get_user_name(scope, self.mid),
+            get_collection_details(scope, self.series_id, self.mid),
+        )
+        collection_title = collection_details["title"]
+        emit_download_report(collection_title, badge="视频合集")
+
+        # 选集过滤
+        episodes = parse_episodes_selection(options["episodes"], len(collection_details["pages"]))
+        collection_details["pages"] = list(filter(lambda item: item["id"] in episodes, collection_details["pages"]))
+
+        items = collection_details["pages"]
+        avids = [item["avid"] for item in items]
+
+        # 逐视频解析完成即构建分集并通过显式回调推流，最终按 index 重排。
+        episodes_by_index: dict[int, list[ResolvableEpisode]] = {}
+
+        async def build_episodes(resolved: IndexedResolveItem[UgcVideoList]) -> None:
+            index = resolved.index
+            ugc_video_list = resolved.value
+            if len(ugc_video_list["pages"]) != 1:
+                emit_download_report(
+                    f"视频合集 {collection_title} 中的视频 {items[index]['avid']} 包含多个视频！",
+                    ReportLevel.ERROR,
+                )
+            built: list[ResolvableEpisode] = []
+            for ugc_video_item in ugc_video_list["pages"]:
+                episode = make_ugc_video_episode(
+                    scope,
+                    ugc_video_item["avid"],
+                    ugc_video_item,
+                    options,
+                    {
+                        # TODO: 关于对于 id 的优化
+                        # TODO: 关于对于 title 的优化（最好使用合集标题，而不是原来的视频标题）
+                        "series_title": collection_title,
+                        "username": username,  # 虽然默认模板的用不上，但这里可以提供一下
+                        "title": ugc_video_list["title"],
+                        "pubdate": ugc_video_list["pubdate"],
+                    },
+                    "{series_title}/{title}",
+                )
+                if on_item is not None:
+                    await on_item(episode)
+                else:
+                    await asyncio.sleep(0)
+                built.append(episode)
+            episodes_by_index[index] = built
+
+        batch_outcome = await resolve_ugc_video_lists(
+            scope,
+            avids,
+            publication_time_filter=options["publication_time_filter"],
+            on_resolved=build_episodes,
+        )
+        return ResolveOutcome(
+            items=tuple(episode for index in range(len(avids)) for episode in episodes_by_index.get(index, [])),
+            failures=tuple(failure.error for failure in batch_outcome.failures),
+        )

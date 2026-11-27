@@ -1,0 +1,24 @@
+[package]
+name = "haya-http"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license = "MIT OR Apache-2.0"
+description = "Reqwest HTTP Range source adapter for Haya"
+readme = "README.md"
+keywords = ["async", "download", "http", "range", "reqwest"]
+categories = ["asynchronous", "network-programming"]
+publish = ["crates-io"]
+
+[dependencies]
+async-trait.workspace = true
+futures-util.workspace = true
+haya = { version = "0.0.1", path = "../haya" }
+reqwest.workspace = true
+
+[dev-dependencies]
+reqwest = { workspace = true, features = ["gzip"] }
+rustls.workspace = true
+tempfile = "3.27.0"
+tokio.workspace = true

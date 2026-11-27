@@ -1,0 +1,415 @@
+from __future__ import annotations
+
+import re
+from typing import TYPE_CHECKING, Any, TypedDict
+
+from returns.result import Failure
+
+from yutto.core.operation import ReportColor, ReportLevel, emit_download_report
+from yutto.exceptions import (
+    NoAccessPermissionError,
+    NotFoundError,
+    UnSupportedTypeError,
+)
+from yutto.media.codec import audio_codec_map, video_codec_map
+from yutto.types import (
+    AId,
+    AudioUrlMeta,
+    BvId,
+    CId,
+    EpisodeId,
+    MultiLangSubtitle,
+    VideoUrlMeta,
+    format_ids,
+)
+from yutto.utils.fetcher import Fetcher, unwrap_fetch_result
+from yutto.utils.functional.data_access import data_has_chained_keys
+from yutto.utils.metadata import Actor, ChapterInfoData, MetaData
+from yutto.utils.subtitle import matches_subtitle_language
+from yutto.utils.time import get_time_stamp_by_now
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from yutto.core.execution import ExecutionScope
+    from yutto.types import AvId
+
+
+class _UgcVideoPageInfo(TypedDict):
+    cid: CId
+    part: str
+
+
+class _UgcVideoInfo(TypedDict):
+    avid: AvId
+    aid: AId
+    bvid: BvId
+    episode_id: EpisodeId
+    is_bangumi: bool
+    picture: str
+    title: str
+    pubdate: int
+    description: str
+    pages: list[_UgcVideoPageInfo]
+    genre: list[str]
+    actor: list[Actor]
+    tag: list[str]
+
+
+class UgcVideoListItem(TypedDict):
+    id: int
+    name: str
+    avid: AvId
+    cid: CId
+    metadata: MetaData
+
+
+class UgcVideoList(TypedDict):
+    title: str
+    pubdate: int
+    avid: AvId
+    pages: list[UgcVideoListItem]
+
+
+async def get_ugc_video_tag(scope: ExecutionScope, avid: AvId) -> list[str]:
+    tags: list[str] = []
+    tag_api = "http://api.bilibili.com/x/tag/archive/tags?aid={aid}&bvid={bvid}"
+    res_json = unwrap_fetch_result(await Fetcher.fetch_json(scope, tag_api.format(**avid.to_dict())))
+    if res_json["code"] != 0:
+        raise NotFoundError(f"无法获取视频 {avid} 标签")
+    for tag in res_json["data"]:
+        tags.append(tag["tag_name"])
+    return tags
+
+
+async def get_ugc_video_info(scope: ExecutionScope, avid: AvId) -> _UgcVideoInfo:
+    regex_ep = re.compile(r"https?://www\.bilibili\.com/bangumi/play/ep(?P<episode_id>\d+)")
+    info_api = "http://api.bilibili.com/x/web-interface/view?aid={aid}&bvid={bvid}"
+    info_result = await Fetcher.fetch_json(scope, info_api.format(**avid.to_dict()))
+    if isinstance(info_result, Failure):
+        raise NotFoundError(f"无法获取该视频 {avid} 信息") from info_result.failure()
+    res_json = info_result.unwrap()
+    res_json_data = res_json.get("data")
+    if res_json["code"] == 62002:
+        raise NotFoundError(f"无法下载该视频 {avid}，原因：{res_json['message']}")
+    if res_json["code"] == 62012:
+        raise NoAccessPermissionError(
+            f"无法获取该视频 {avid} 信息，原因：{res_json['message']}（当前稿件up主设置为仅自见）"
+        )
+    if res_json["code"] == -404:
+        raise NotFoundError(f"啊叻？视频 {avid} 不见了诶")
+    assert res_json_data is not None, "响应数据无 data 域"
+    if res_json_data.get("forward"):
+        forward_avid = AId(str(res_json_data["forward"]))
+        emit_download_report(f"视频 {avid} 撞车了哦！正在跳转到原视频 {forward_avid}～")
+        return await get_ugc_video_info(scope, forward_avid)
+    episode_id = EpisodeId("")
+    if res_json_data.get("redirect_url") and (ep_match := regex_ep.match(res_json_data["redirect_url"])):
+        episode_id = EpisodeId(ep_match.group("episode_id"))
+
+    actors = _parse_actor_info(res_json_data)
+    genres = _parse_genre_info(res_json_data)
+    tags: list[str] = await get_ugc_video_tag(scope, avid)
+    return _UgcVideoInfo(
+        avid=BvId(res_json_data["bvid"]),
+        aid=AId(str(res_json_data["aid"])),
+        bvid=BvId(res_json_data["bvid"]),
+        episode_id=episode_id,
+        is_bangumi=bool(episode_id),
+        picture=res_json_data["pic"],
+        title=res_json_data["title"],
+        pubdate=res_json_data["pubdate"],
+        description=res_json_data["desc"],
+        pages=[
+            _UgcVideoPageInfo(
+                cid=CId(str(page["cid"])),
+                part=page["part"],
+            )
+            for page in res_json_data["pages"]
+        ],
+        actor=actors,
+        tag=tags,
+        genre=genres,
+    )
+
+
+async def get_ugc_video_list(scope: ExecutionScope, avid: AvId) -> UgcVideoList:
+    video_info = await get_ugc_video_info(scope, avid)
+    if avid not in [video_info["aid"], video_info["bvid"]]:
+        avid = video_info["avid"]
+    video_title = video_info["title"]
+    result: UgcVideoList = {
+        "title": video_title,
+        "avid": avid,
+        "pubdate": video_info["pubdate"],
+        "pages": [],
+    }
+    # 对无意义的分 p 视频名进行修改
+    for i, page_info in enumerate(video_info["pages"]):
+        if _is_meaningless_name(page_info["part"]):
+            page_info["part"] = f"{video_title}_P{i + 1:02}"
+
+    result["pages"] = [
+        UgcVideoListItem(
+            id=i + 1,
+            name=page_info["part"],
+            avid=avid,
+            cid=page_info["cid"],
+            metadata=_parse_ugc_video_metadata(video_info, page_info, is_first_page=i == 0),
+        )
+        for i, page_info in enumerate(video_info["pages"])
+    ]
+    return result
+
+
+def show_ai_translation_language(resp_json: dict[str, Any], ai_translation_language: str | None) -> None:
+    # AI 原声翻译功能检测和展示，Example: BV1G3HEz5ETU
+    if not data_has_chained_keys(resp_json, ["data", "language", "items"]):
+        if ai_translation_language:
+            emit_download_report(
+                f"该视频未启用 AI 原声翻译功能, 无法获得 {ai_translation_language} 语言翻译哦～",
+                ReportLevel.WARNING,
+            )
+        return
+    if not resp_json["data"]["language"]["items"]:
+        if ai_translation_language:
+            emit_download_report(
+                f"该视频未启用 AI 原声翻译功能, 无法获得 {ai_translation_language} 语言翻译哦～",
+                ReportLevel.WARNING,
+            )
+        return
+    current_lang_id = -1
+    emit_download_report("该视频已启用的 AI 原声翻译语言列表：")
+    for i, lang_info in enumerate(resp_json["data"]["language"]["items"]):
+        if lang_info["lang"] == ai_translation_language:
+            current_lang_id = i
+        log = "{}{:2} {} (code: {})".format(
+            "*" if i == current_lang_id else " ",
+            i,
+            lang_info["title"],
+            lang_info["lang"],
+        )
+        if i == current_lang_id:
+            emit_download_report(log, color=ReportColor.GREEN)
+        else:
+            emit_download_report(log)
+    if current_lang_id != -1:
+        # language found, do nothing
+        return
+    if ai_translation_language:
+        emit_download_report(
+            f"该视频未为语言 {ai_translation_language} 支持 AI 原声翻译功能哦～",
+            ReportLevel.WARNING,
+        )
+        return
+    emit_download_report("若想启用 AI 原声翻译功能，可以使用 `--ai-translation-language=<code>` 参数指定目标语言喔～")
+
+
+async def get_ugc_video_playurl(
+    scope: ExecutionScope, avid: AvId, cid: CId, ai_translation_language: str | None = None
+) -> tuple[list[VideoUrlMeta], list[AudioUrlMeta]]:
+    # 4048 = 16(useDash) | 64(useHDR) | 128(use4K) | 256(useDolbyAudio) | 512(useDolbyVision) | 1024(use8K) | 2048(useAV1)
+    play_api = "https://api.bilibili.com/x/player/playurl?avid={aid}&bvid={bvid}&cid={cid}&qn=127&type=&otype=json&fnver=0&fnval=4048&fourk=1"
+    if ai_translation_language:
+        play_api += f"&cur_language={ai_translation_language}"
+
+    play_result = await Fetcher.fetch_json(scope, play_api.format(**avid.to_dict(), cid=cid))
+    if isinstance(play_result, Failure):
+        raise NoAccessPermissionError(f"无法获取该视频链接（{format_ids(avid, cid)}）") from play_result.failure()
+    resp_json = play_result.unwrap()
+    if resp_json.get("data") is None:
+        raise NoAccessPermissionError(
+            f"无法获取该视频链接（{format_ids(avid, cid)}），原因：{resp_json.get('message')}"
+        )
+    if resp_json["data"].get("dash") is None:
+        raise UnSupportedTypeError(f"该视频（{format_ids(avid, cid)}）尚不支持 DASH 格式")
+    videos: list[VideoUrlMeta] = (
+        [
+            VideoUrlMeta(
+                url=video["base_url"],
+                mirrors=video["backup_url"] if video["backup_url"] is not None else [],
+                codec=video_codec_map[video["codecid"]],
+                width=video["width"],
+                height=video["height"],
+                quality=video["id"],
+            )
+            for video in resp_json["data"]["dash"]["video"]
+        ]
+        if resp_json["data"]["dash"]["video"]
+        else []
+    )
+    audios: list[AudioUrlMeta] = (
+        [
+            AudioUrlMeta(
+                url=audio["base_url"],
+                mirrors=audio["backup_url"] if audio["backup_url"] is not None else [],
+                codec=audio_codec_map[audio["codecid"]],
+                width=0,
+                height=0,
+                quality=audio["id"],
+            )
+            for audio in resp_json["data"]["dash"]["audio"]
+        ]
+        if resp_json["data"]["dash"]["audio"]
+        else []
+    )
+    if resp_json["data"]["dash"]["dolby"] is not None and resp_json["data"]["dash"]["dolby"]["audio"] is not None:
+        dolby_audios_json = resp_json["data"]["dash"]["dolby"]["audio"]
+        audios.extend(
+            AudioUrlMeta(
+                url=dolby_audio_json["base_url"],
+                mirrors=dolby_audio_json["backup_url"] if dolby_audio_json["backup_url"] is not None else [],
+                codec="eac3",  # TODO: 由于这里的 codecid 仍然是 0，所以无法通过 audio_codec_map 转换，暂时直接硬编码
+                width=0,
+                height=0,
+                quality=dolby_audio_json["id"],
+            )
+            for dolby_audio_json in dolby_audios_json
+        )
+    if resp_json["data"]["dash"]["flac"] is not None and resp_json["data"]["dash"]["flac"]["audio"] is not None:
+        hi_res_audio_json = resp_json["data"]["dash"]["flac"]["audio"]
+        audios.append(
+            AudioUrlMeta(
+                url=hi_res_audio_json["base_url"],
+                mirrors=hi_res_audio_json["backup_url"] if hi_res_audio_json["backup_url"] is not None else [],
+                codec="flac",  # TODO: 同上，硬编码
+                width=0,
+                height=0,
+                quality=hi_res_audio_json["id"],
+            )
+        )
+
+    show_ai_translation_language(resp_json, ai_translation_language)
+
+    return (videos, audios)
+
+
+async def get_ugc_video_subtitles(
+    scope: ExecutionScope, avid: AvId, cid: CId, languages: Sequence[str] | None = None
+) -> list[MultiLangSubtitle]:
+    subtitle_api = "https://api.bilibili.com/x/player/wbi/v2?aid={aid}&bvid={bvid}&cid={cid}"
+    subtitle_url = subtitle_api.format(**avid.to_dict(), cid=cid)
+    res_json = (await Fetcher.fetch_json(scope, subtitle_url)).value_or(None)
+    if res_json is None:
+        return []
+    if not data_has_chained_keys(res_json, ["data", "subtitle", "subtitles"]):
+        return []
+    results: list[MultiLangSubtitle] = []
+    for sub_info in res_json["data"]["subtitle"]["subtitles"]:
+        if not matches_subtitle_language(sub_info["lan"], languages):
+            continue
+        subtitle_url = sub_info["subtitle_url"]
+
+        # 检查 subtitle_url 是否有效
+        if subtitle_url is None or not subtitle_url.strip():
+            emit_download_report(
+                f"跳过无效的字幕URL（{format_ids(avid, cid)}），语言：{sub_info.get('lan_doc', '未知')}",
+                ReportLevel.WARNING,
+            )
+            continue
+
+        subtitle_text = (await Fetcher.fetch_json(scope, "https:" + subtitle_url)).value_or(None)
+        if subtitle_text is None:
+            continue
+        results.append(
+            MultiLangSubtitle(
+                lang=sub_info["lan_doc"],
+                lines=subtitle_text["body"],
+            )
+        )
+    return results
+
+
+async def get_ugc_video_chapters(scope: ExecutionScope, avid: AvId, cid: CId) -> list[ChapterInfoData]:
+    chapter_api = "https://api.bilibili.com/x/player/v2?aid={aid}&bvid={bvid}&cid={cid}"
+    chapter_url = chapter_api.format(**avid.to_dict(), cid=cid)
+    chapter_json_info = (await Fetcher.fetch_json(scope, chapter_url)).value_or(None)
+    if chapter_json_info is None:
+        return []
+    if not data_has_chained_keys(chapter_json_info, ["data", "view_points"]):
+        emit_download_report(
+            f"无法获取该视频的章节信息（{format_ids(avid, cid)}），原因：{chapter_json_info.get('message')}",
+            ReportLevel.WARNING,
+        )
+        return []
+
+    raw_chapter_info = chapter_json_info["data"]["view_points"]
+    return [
+        ChapterInfoData(content=chapter_info["content"], start=chapter_info["from"], end=chapter_info["to"])
+        for chapter_info in raw_chapter_info
+    ]
+
+
+def _parse_ugc_video_metadata(
+    video_info: _UgcVideoInfo,
+    page_info: _UgcVideoPageInfo,
+    is_first_page: bool = False,
+) -> MetaData:
+    return MetaData(
+        title=page_info["part"],
+        show_title=page_info["part"],
+        plot=video_info["description"],
+        thumb=video_info["picture"],
+        premiered=video_info["pubdate"],
+        dateadded=get_time_stamp_by_now(),
+        actor=video_info["actor"],
+        genre=video_info["genre"],
+        tag=video_info["tag"],
+        source="",  # TODO
+        original_filename="",  # TODO
+        website=video_info["bvid"].to_url(),
+        chapter_info_data=[],
+    )
+
+
+def _parse_actor_info(video_info: dict[str, Any]):
+    actors: list[Actor] = []
+    if video_info.get("staff") and isinstance(video_info["staff"], list):
+        _index: int = 0
+        staff_list: list[dict[str, Any]] = video_info["staff"]
+        for staff in staff_list:
+            actors.append(
+                Actor(
+                    name=staff["name"],
+                    role=staff["title"],
+                    thumb=staff["face"],
+                    profile=f"https://space.bilibili.com/{staff['mid']}",
+                    order=_index,
+                )
+            )
+            _index += 1
+    elif video_info.get("owner") and isinstance(video_info["owner"], dict):
+        staff_info: dict[str, Any] = video_info["owner"]
+        actors.append(
+            Actor(
+                name=staff_info["name"],
+                role="UP主",
+                thumb=staff_info["face"],
+                profile=f"https://space.bilibili.com/{staff_info['mid']}",
+                order=0,
+            )
+        )
+    else:
+        emit_download_report("未找到演职人员信息", ReportLevel.WARNING)
+    return actors
+
+
+def _parse_genre_info(video_info: dict[str, Any]) -> list[str]:
+    genres: list[str] = []
+    if video_info.get("tname") and isinstance(video_info["tname"], str):
+        genres.append(video_info["tname"])
+    return genres
+
+
+def _is_meaningless_name(name: str) -> bool:
+    """检测名称是否为无意义的名称"""
+    # name 为空
+    if not name:
+        return True
+
+    # name 为视频文件名
+    video_ext_list = [".mp4", ".flv", ".mkv", ".avi", ".wmv", ".mov", ".mpg", ".mpeg", ".ts"]
+    for video_ext in video_ext_list:
+        if name.endswith(video_ext):
+            return True
+    return False

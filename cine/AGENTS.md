@@ -6,6 +6,7 @@
 audio/    配乐、音效、旁白时间轴、混音
 video/    成片：engines/dom（DOM+Three.js）、engines/canvas（WebCodecs）、engines/deliver.py
 image/    Ark：Seedream 图 / Seedance 视频
+media/    站外素材：B 站视频/音频/封面/字幕（yutto）
 vendor/   第三方运行时（three.js）
 ```
 
@@ -28,7 +29,7 @@ vendor/   第三方运行时（three.js）
 
 跨域零件放 `tools/lib/`（ffmpeg、browser、server、paths）。
 
-`audio/` 已按这个分层；`video/`、`image/` 逐步对齐。新增引擎时先决定落在哪一层，不要往 `tools/` 里塞。
+`audio/`、`media/` 已按这个分层；`video/`、`image/` 逐步对齐。新增引擎时先决定落在哪一层，不要往 `tools/` 里塞。
 
 ## BGM 获取
 
@@ -41,3 +42,17 @@ vendor/   第三方运行时（three.js）
 - 网易云专用：`musicdl` 已装在 `tools/local/musicdl`，封装 `python cine/audio/tools/musicdl_bgm.py search|download`，可下 FLAC + 320k MP3。
 - 网络先直连；超时/重置时用 `socks5://127.0.0.1:1080`，或按 `AGENTS.md` 用用户提供的代理。
 - BGM 文件放 `resources/music/`，不要放 `cine/`；入库时更新 `resources/music/AGENTS.md`。
+
+## B 站素材
+
+参考视频用 [`media/`](media/AGENTS.md) 的 yutto 封装下载，不要直接调 yutto：
+
+```powershell
+python cine/media/engines/bilibili.py setup
+python cine/media/engines/bilibili.py doctor
+python cine/media/engines/bilibili.py download BV1BV4y1p7Xb
+```
+
+- 默认输出 `resources/references/bilibili/<BV>/`，含视频、`cover.jpg`、`meta.json`。
+- 未登录只有 480P；要 1080P+ 先 `login` 扫码（凭证在 `tools/local/yutto-auth.toml`）。
+- stdout 是 JSON，进度走 stderr；详细参数、质量表和失败处理见 `media/AGENTS.md`。

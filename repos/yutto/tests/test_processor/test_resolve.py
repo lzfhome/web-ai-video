@@ -1,0 +1,659 @@
+from __future__ import annotations
+
+import asyncio
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, cast
+
+import pytest
+from returns.result import Success
+
+import yutto.core.execution as execution_module
+import yutto.download_manager as download_manager_module
+from yutto.core.events import DownloadItemListed, DownloadStage, DownloadStageChanged
+from yutto.core.execution import ExecutionScope, RequestExecutionScopeFactory
+from yutto.core.operation import bind_download_event_sink
+from yutto.core.request import DownloadRequest
+from yutto.core.result import ResolvedItem, ResolveFailure, ResolveResult
+from yutto.download_manager import DownloadManager
+from yutto.exceptions import ErrorCode, MaxRetryError, NotFoundError, NotLoginError, ResolveFailedError
+from yutto.extractor._abc import BatchExtractor
+from yutto.extractor.common import build_bangumi_info
+from yutto.extractor.outcome import ResolveOutcome
+from yutto.extractor.utils.batch import resolve_ugc_video_lists
+from yutto.types import AId, BvId, CId, EpisodeId, ResolvableEpisode
+from yutto.utils.fetcher import Fetcher
+from yutto.utils.filter import PublicationTimeFilter
+from yutto.utils.functional import as_sync
+
+if TYPE_CHECKING:
+    from yutto.api.bangumi import BangumiListItem
+    from yutto.api.ugc_video import UgcVideoList
+    from yutto.core.events import DownloadEvent
+    from yutto.extractor._abc import EpisodeListedCallback, ExtractorResolveOutcome
+    from yutto.extractor.utils.batch import IndexedResolveItem
+    from yutto.types import EpisodeData, EpisodeInfo, ExtractorOptions
+
+pytestmark = pytest.mark.processor
+
+
+@pytest.fixture
+def extractor_options() -> ExtractorOptions:
+    return {
+        "episodes": "1",
+        "with_extra_episodes": False,
+        "skip_preview": False,
+        "require_video": True,
+        "require_audio": True,
+        "require_danmaku": True,
+        "require_subtitle": True,
+        "subtitle_languages": None,
+        "require_metadata": False,
+        "require_cover": True,
+        "require_chapter_info": True,
+        "danmaku_format": "ass",
+        "subpath_template": "{auto}",
+        "ai_translation_language": None,
+        "publication_time_filter": PublicationTimeFilter.from_strings(),
+    }
+
+
+def test_build_bangumi_info_projects_listing_metadata(extractor_options: ExtractorOptions):
+    bangumi_info: BangumiListItem = {
+        "id": 1,
+        "name": "第1话 冒险的结束",
+        "cid": CId("1277806556"),
+        "episode_id": EpisodeId("779775"),
+        "avid": BvId("BV1Nw411C7qS"),
+        "duration": 1559933,
+        "is_section": False,
+        "is_preview": False,
+        "metadata": {
+            "title": "第1话 冒险的结束",
+            "show_title": "《葬送的芙莉莲》第1话 冒险的结束",
+            "plot": "寿命逾千年的魔法使芙莉莲，踏上了了解人类的旅途。",
+            "thumb": "https://i0.hdslb.com/cover.png",
+            "premiered": 1698148800,
+            "dateadded": 1700000000,
+            "actor": [
+                {
+                    "name": "哔哩哔哩番剧",
+                    "role": "UP主",
+                    "thumb": "https://i1.hdslb.com/avatar.jpg",
+                    "profile": "https://space.bilibili.com/928123",
+                    "order": 0,
+                }
+            ],
+            "genre": [],
+            "tag": ["漫画改", "奇幻", "治愈", "冒险"],
+            "source": "",
+            "original_filename": "",
+            "website": "",
+            "chapter_info_data": [],
+        },
+    }
+
+    info = build_bangumi_info(
+        bangumi_info,
+        extractor_options,
+        {"title": "葬送的芙莉莲"},
+        "{title}/{name}",
+    )
+
+    assert info["listing"] == ResolvedItem(
+        avid=BvId("BV1Nw411C7qS"),
+        cid=CId("1277806556"),
+        url="https://www.bilibili.com/bangumi/play/ep779775",
+        name="第1话 冒险的结束",
+        title="葬送的芙莉莲",
+        cover_url="https://i0.hdslb.com/cover.png",
+        planned_path=Path("葬送的芙莉莲/第1话 冒险的结束"),
+        uploader="哔哩哔哩番剧",
+        description="寿命逾千年的魔法使芙莉莲，踏上了了解人类的旅途。",
+        tags=("漫画改", "奇幻", "治愈", "冒险"),
+        pubdate=1698148800,
+        duration=1559,
+    )
+
+
+def make_info(
+    name: str,
+    display_group: str | None = None,
+    *,
+    description: str = "视频简介",
+    tags: tuple[str, ...] = ("标签A", "标签B"),
+    pubdate: int = 0,
+    duration: int = 0,
+) -> EpisodeInfo:
+    planned_path = Path(f"标题/{name}")
+    return {
+        "listing": ResolvedItem(
+            avid=AId("1"),
+            cid=CId("10"),
+            url="https://www.bilibili.com/video/av1?p=1",
+            name=name,
+            title="标题",
+            cover_url="https://example.com/cover.jpg",
+            uploader="某UP主",
+            description=description,
+            tags=tags,
+            pubdate=pubdate,
+            duration=duration,
+            planned_path=planned_path,
+            display_group=display_group,
+        ),
+        "path": planned_path,
+    }
+
+
+def copy_info(info: EpisodeInfo) -> EpisodeInfo:
+    return {
+        "listing": info["listing"].model_copy(),
+        "path": info["path"],
+    }
+
+
+class RecordingEventSink:
+    def __init__(self) -> None:
+        self.events: list[DownloadEvent] = []
+
+    def emit(self, event: DownloadEvent) -> None:
+        self.events.append(event)
+
+
+@as_sync
+async def test_resolve_items_lists_stable_info_without_resolving_data(monkeypatch: pytest.MonkeyPatch):
+    executed: list[str] = []
+
+    async def resolve_episode() -> EpisodeData | None:
+        executed.append("ran")
+        return None
+
+    info = make_info("P1", display_group="标题")
+    resolvable = ResolvableEpisode(info=info, resolve_data=resolve_episode)
+
+    class FakeExtractor:
+        def resolve_shortcut(self, id: str) -> tuple[bool, str]:
+            return True, f"https://example.com/{id}"
+
+        def match(self, url: str) -> bool:
+            return url == "https://example.com/BV1baseline"
+
+        async def __call__(
+            self,
+            scope: ExecutionScope,
+            options: ExtractorOptions,
+        ) -> ExtractorResolveOutcome:
+            return ResolveOutcome(items=(resolvable,))
+
+    async def fake_validate_user_info(scope: ExecutionScope, requirements: dict[str, bool]) -> bool:
+        return True
+
+    async def fake_get_redirected_url(scope: ExecutionScope, url: str):
+        return Success(url)
+
+    monkeypatch.setattr(download_manager_module, "UgcVideoExtractor", FakeExtractor)
+    monkeypatch.setattr(download_manager_module, "validate_user_info", fake_validate_user_info)
+    monkeypatch.setattr(Fetcher, "get_redirected_url", fake_get_redirected_url)
+
+    manager = DownloadManager()
+    sink = RecordingEventSink()
+    client = cast("Any", object())
+    request = DownloadRequest.model_validate({"source": {"url": "BV1baseline"}})
+
+    with bind_download_event_sink(sink):
+        items = await manager.resolve_items(ExecutionScope(client), request)
+
+    expected_item = ResolvedItem(
+        avid=AId("1"),
+        cid=CId("10"),
+        url="https://www.bilibili.com/video/av1?p=1",
+        name="P1",
+        title="标题",
+        cover_url="https://example.com/cover.jpg",
+        planned_path=Path("标题/P1"),
+        display_group="标题",
+        uploader="某UP主",
+        description="视频简介",
+        tags=("标签A", "标签B"),
+        pubdate=0,
+        duration=0,
+    )
+    assert items.items == (expected_item,)
+    assert items.failures == ()
+    # data resolver 从未调用，因此没有未 await 的 coroutine 需要清理
+    assert executed == []
+    assert sink.events == [
+        DownloadStageChanged(name=DownloadStage.RESOLVING),
+        DownloadItemListed(item=expected_item),
+    ]
+    listed = sink.events[1]
+    assert isinstance(listed, DownloadItemListed)
+    assert listed.item is items.items[0]
+    info["path"] = Path("标题/下载期重命名")
+    assert items.items[0].tags == ("标签A", "标签B")
+    assert items.items[0].planned_path == Path("标题/P1")
+
+
+@as_sync
+async def test_resolve_items_streams_explicit_items_without_duplicates(monkeypatch: pytest.MonkeyPatch):
+    """流式回调与最终结果中的等值条目不依赖对象身份去重。"""
+
+    resolved: list[str] = []
+
+    async def noop() -> EpisodeData | None:
+        resolved.append("ran")
+        return None
+
+    first_info = make_info("P1", display_group="标题", description="先完成", tags=("first",))
+    second_info = make_info("P1", display_group="标题", description="后完成", tags=("second",))
+    final_first_info = copy_info(first_info)
+    final_second_info = copy_info(second_info)
+
+    streamed_first = ResolvableEpisode(info=first_info, resolve_data=noop)
+    streamed_second = ResolvableEpisode(info=second_info, resolve_data=noop)
+    final_first = ResolvableEpisode(info=final_first_info, resolve_data=noop)
+    final_second = ResolvableEpisode(info=final_second_info, resolve_data=noop)
+    late = ResolvableEpisode(info=make_info("P2", display_group="标题"), resolve_data=noop)
+
+    class FakeExtractor(BatchExtractor):
+        def resolve_shortcut(self, id: str) -> tuple[bool, str]:
+            return True, f"https://example.com/{id}"
+
+        def match(self, url: str) -> bool:
+            return url == "https://example.com/BV1stream"
+
+        async def extract(
+            self,
+            scope: ExecutionScope,
+            options: ExtractorOptions,
+            *,
+            on_item: EpisodeListedCallback | None = None,
+        ) -> ExtractorResolveOutcome:
+            # first/second 的旧五字段 key 相同但 metadata 不同；最终顺序反转，
+            # 用于保证 occurrence 由完整 canonical snapshot 匹配。
+            assert on_item is not None
+            await on_item(streamed_first)
+            await on_item(streamed_first)
+            await on_item(streamed_second)
+            return ResolveOutcome(items=(final_second, final_first, late))
+
+    async def fake_validate_user_info(scope: ExecutionScope, requirements: dict[str, bool]) -> bool:
+        return True
+
+    async def fake_get_redirected_url(scope: ExecutionScope, url: str):
+        return Success(url)
+
+    monkeypatch.setattr(download_manager_module, "UgcVideoExtractor", FakeExtractor)
+    monkeypatch.setattr(download_manager_module, "validate_user_info", fake_validate_user_info)
+    monkeypatch.setattr(Fetcher, "get_redirected_url", fake_get_redirected_url)
+
+    manager = DownloadManager()
+    sink = RecordingEventSink()
+    client = cast("Any", object())
+    request = DownloadRequest.model_validate({"source": {"url": "BV1stream"}})
+
+    with bind_download_event_sink(sink):
+        items = await manager.resolve_items(ExecutionScope(client), request)
+
+    listed = [event for event in sink.events if isinstance(event, DownloadItemListed)]
+    # 同一对象的重复 callback 不会重复发送；P2 在收尾阶段补发。
+    assert [event.item.name for event in listed] == ["P1", "P1", "P2"]
+    assert [event.item.description for event in listed] == ["先完成", "后完成", "视频简介"]
+    # 返回列表保持提取器给出的顺序
+    assert [item.name for item in items.items] == ["P1", "P1", "P2"]
+    assert [item.description for item in items.items] == ["后完成", "先完成", "视频简介"]
+    # event 与 result 复用同一 snapshot，即使最终 extractor 返回的是等值 copy。
+    assert listed[0].item is items.items[1]
+    assert listed[1].item is items.items[0]
+    assert listed[2].item is items.items[2]
+    # resolve-only 路径不会调用 data resolver，也不会提前创建 coroutine
+    assert resolved == []
+
+
+@as_sync
+async def test_resolve_items_emits_each_equal_occurrence(monkeypatch: pytest.MonkeyPatch):
+    """流式回调中字段完全相同的独立条目仍各自对应一条事件。"""
+
+    async def noop() -> EpisodeData | None:
+        return None
+
+    first = ResolvableEpisode(info=make_info("P1", display_group="标题"), resolve_data=noop)
+    second = ResolvableEpisode(info=make_info("P1", display_group="标题"), resolve_data=noop)
+    final_first = ResolvableEpisode(info=make_info("P1", display_group="标题"), resolve_data=noop)
+    final_second = ResolvableEpisode(info=make_info("P1", display_group="标题"), resolve_data=noop)
+
+    class FakeExtractor(BatchExtractor):
+        def resolve_shortcut(self, id: str) -> tuple[bool, str]:
+            return True, f"https://example.com/{id}"
+
+        def match(self, url: str) -> bool:
+            return url == "https://example.com/BV1equal"
+
+        async def extract(
+            self,
+            scope: ExecutionScope,
+            options: ExtractorOptions,
+            *,
+            on_item: EpisodeListedCallback | None = None,
+        ) -> ExtractorResolveOutcome:
+            assert on_item is not None
+            await on_item(first)
+            await on_item(first)
+            await on_item(second)
+            return ResolveOutcome(items=(final_first, final_second))
+
+    async def fake_validate_user_info(scope: ExecutionScope, requirements: dict[str, bool]) -> bool:
+        return True
+
+    async def fake_get_redirected_url(scope: ExecutionScope, url: str):
+        return Success(url)
+
+    monkeypatch.setattr(download_manager_module, "UgcVideoExtractor", FakeExtractor)
+    monkeypatch.setattr(download_manager_module, "validate_user_info", fake_validate_user_info)
+    monkeypatch.setattr(Fetcher, "get_redirected_url", fake_get_redirected_url)
+
+    manager = DownloadManager()
+    sink = RecordingEventSink()
+    client = cast("Any", object())
+    request = DownloadRequest.model_validate({"source": {"url": "BV1equal"}})
+
+    with bind_download_event_sink(sink):
+        outcome = await manager.resolve_items(ExecutionScope(client), request)
+
+    listed = [event for event in sink.events if isinstance(event, DownloadItemListed)]
+    assert len(listed) == len(outcome.items) == 2
+    assert listed[0].item == listed[1].item
+    assert listed[0].item is not listed[1].item
+    assert outcome.items[0] == outcome.items[1]
+    assert outcome.items[0] is not outcome.items[1]
+    assert listed[0].item is outcome.items[0]
+    assert listed[1].item is outcome.items[1]
+
+
+class _FakeClientContext:
+    async def __aenter__(self) -> Any:
+        return cast("Any", object())
+
+    async def __aexit__(self, *args: object) -> bool:
+        return False
+
+
+def _patch_resolve_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def fake_validate_user_info(scope: ExecutionScope, requirements: dict[str, bool]) -> bool:
+        return True
+
+    async def fake_get_redirected_url(scope: ExecutionScope, url: str):
+        return Success(url)
+
+    monkeypatch.setattr(download_manager_module, "validate_user_info", fake_validate_user_info)
+    monkeypatch.setattr(Fetcher, "get_redirected_url", fake_get_redirected_url)
+    monkeypatch.setattr(execution_module, "create_client", lambda **_: _FakeClientContext())
+
+
+def _patch_resolve_environment(monkeypatch: pytest.MonkeyPatch, extractor: type) -> None:
+    _patch_resolve_network(monkeypatch)
+    monkeypatch.setattr(download_manager_module, "UgcVideoExtractor", extractor)
+
+
+class _ShortcutExtractorBase:
+    def resolve_shortcut(self, url: str) -> tuple[bool, str]:
+        return True, f"https://example.com/{url}"
+
+    def match(self, url: str) -> bool:
+        return True
+
+
+@as_sync
+async def test_execute_resolve_raises_original_error_when_batch_source_is_gone(monkeypatch: pytest.MonkeyPatch):
+    async def raise_not_found(scope: ExecutionScope, avid: object):
+        raise NotFoundError(f"啊叻？视频 {avid} 不见了诶")
+
+    _patch_resolve_network(monkeypatch)
+    monkeypatch.setattr("yutto.extractor.ugc_video_batch.get_ugc_video_list", raise_not_found)
+    manager = DownloadManager()
+    request = DownloadRequest.model_validate(
+        {"source": {"url": "https://www.bilibili.com/video/BV1AbCdEfGhI"}, "scope": {"batch": True}}
+    )
+
+    # 真实 UgcVideoBatchExtractor 错误路径：NotFoundError 被吞成 [] 后不再伪装成空成功，
+    # 任务以原始异常失败，wire 错误码是稳定的 NOT_FOUND_ERROR 而非 internal_error
+    with bind_download_event_sink(RecordingEventSink()), pytest.raises(NotFoundError) as error_info:
+        await manager.execute_resolve(RequestExecutionScopeFactory(), [request])
+    assert error_info.value.code is ErrorCode.NOT_FOUND_ERROR
+
+
+@as_sync
+async def test_execute_resolve_raises_original_error_when_watch_later_needs_login(monkeypatch: pytest.MonkeyPatch):
+    async def raise_not_login(scope: ExecutionScope):
+        raise NotLoginError("账号未登录，无法获取稍后再看列表")
+
+    _patch_resolve_network(monkeypatch)
+    monkeypatch.setattr("yutto.extractor.user_watch_later.get_watch_later_avids", raise_not_login)
+    manager = DownloadManager()
+    request = DownloadRequest.model_validate(
+        {"source": {"url": "https://www.bilibili.com/watchlater/"}, "scope": {"batch": True}}
+    )
+
+    # 真实 UserWatchLaterExtractor 错误路径：未登录时不再以空成功掩盖 NotLoginError
+    with bind_download_event_sink(RecordingEventSink()), pytest.raises(NotLoginError) as error_info:
+        await manager.execute_resolve(RequestExecutionScopeFactory(), [request])
+    assert error_info.value.code is ErrorCode.NOT_LOGIN_ERROR
+
+
+@as_sync
+async def test_execute_resolve_reports_partial_failures(monkeypatch: pytest.MonkeyPatch):
+    async def resolve_episode() -> EpisodeData | None:
+        return None
+
+    resolvable = ResolvableEpisode(info=make_info("P1"), resolve_data=resolve_episode)
+
+    class PartialExtractor(_ShortcutExtractorBase):
+        async def __call__(
+            self,
+            scope: ExecutionScope,
+            options: ExtractorOptions,
+        ) -> ExtractorResolveOutcome:
+            return ResolveOutcome(
+                items=(resolvable,),
+                failures=(MaxRetryError("获取视频 av2 信息失败：超出最大重试次数！"),),
+            )
+
+    _patch_resolve_environment(monkeypatch, PartialExtractor)
+    manager = DownloadManager()
+    request = DownloadRequest.model_validate({"source": {"url": "BV1partial"}})
+
+    with bind_download_event_sink(RecordingEventSink()):
+        result = await manager.execute_resolve(RequestExecutionScopeFactory(), [request])
+
+    # 部分失败：成功条目照常返回，失败以结构化形式保留在 failures 中
+    assert len(result.items) == 1
+    assert result.failures == (
+        ResolveFailure(
+            type="MaxRetryError",
+            message="获取视频 av2 信息失败：超出最大重试次数！",
+            code=ErrorCode.MAX_RETRY_ERROR.value,
+        ),
+    )
+
+
+@as_sync
+async def test_execute_resolve_aggregates_multiple_failures(monkeypatch: pytest.MonkeyPatch):
+    class AllFailedExtractor(_ShortcutExtractorBase):
+        async def __call__(
+            self,
+            scope: ExecutionScope,
+            options: ExtractorOptions,
+        ) -> ExtractorResolveOutcome:
+            return ResolveOutcome(
+                failures=(
+                    NotFoundError("啊叻？视频 av1 不见了诶"),
+                    MaxRetryError("获取视频 av2 信息失败：超出最大重试次数！"),
+                )
+            )
+
+    _patch_resolve_environment(monkeypatch, AllFailedExtractor)
+    manager = DownloadManager()
+    request = DownloadRequest.model_validate({"source": {"url": "BV1failed"}})
+
+    with bind_download_event_sink(RecordingEventSink()), pytest.raises(ResolveFailedError) as error_info:
+        await manager.execute_resolve(RequestExecutionScopeFactory(), [request])
+    assert error_info.value.code is ErrorCode.RESOLVE_FAILED_ERROR
+
+
+@as_sync
+async def test_resolve_ugc_video_lists_reports_expected_failures(monkeypatch: pytest.MonkeyPatch):
+    # pubdate 需落在默认过滤窗口（1971-01-01 起）内，用一个正常的时间戳
+    fake_list = {"title": "视频 2", "pubdate": 1700000000, "avid": AId("2"), "pages": []}
+
+    async def fake_get_ugc_video_list(scope: ExecutionScope, avid: object):
+        if str(avid) == "1":
+            raise MaxRetryError("超出最大重试次数！")
+        return fake_list
+
+    async def fake_touch_url(scope: ExecutionScope, url: str):
+        return Success(None)
+
+    monkeypatch.setattr("yutto.extractor.utils.batch.get_ugc_video_list", fake_get_ugc_video_list)
+    monkeypatch.setattr(Fetcher, "touch_url", fake_touch_url)
+
+    client = cast("Any", object())
+    scope = ExecutionScope(client)
+    outcome = await resolve_ugc_video_lists(
+        scope,
+        [AId("1"), AId("2")],
+        publication_time_filter=PublicationTimeFilter.from_strings(None, None),
+    )
+
+    assert [(item.index, str(item.source), item.value) for item in outcome.items] == [(1, "2", fake_list)]
+    assert [(failure.index, str(failure.source)) for failure in outcome.failures] == [(0, "1")]
+    assert [type(failure.error).__name__ for failure in outcome.failures] == ["MaxRetryError"]
+
+
+@as_sync
+async def test_resolve_ugc_video_lists_awaits_async_on_resolved(monkeypatch: pytest.MonkeyPatch):
+    fake_list = {"title": "视频", "pubdate": 1700000000, "avid": AId("2"), "pages": []}
+
+    async def fake_get_ugc_video_list(scope: ExecutionScope, avid: object):
+        return fake_list
+
+    async def fake_touch_url(scope: ExecutionScope, url: str):
+        return Success(None)
+
+    monkeypatch.setattr("yutto.extractor.utils.batch.get_ugc_video_list", fake_get_ugc_video_list)
+    monkeypatch.setattr(Fetcher, "touch_url", fake_touch_url)
+
+    calls: list[tuple[int, str, bool]] = []
+
+    async def on_resolved(resolved: IndexedResolveItem[UgcVideoList]) -> None:
+        calls.append((resolved.index, str(resolved.source), True))
+        # 契约：回调是异步的，逐分集的让出由回调自身负责（内置提取器均如此）
+        await asyncio.sleep(0)
+
+    client = cast("Any", object())
+    scope = ExecutionScope(client)
+    outcome = await resolve_ugc_video_lists(
+        scope,
+        [AId("1"), AId("2")],
+        publication_time_filter=PublicationTimeFilter.from_strings(None, None),
+        on_resolved=on_resolved,
+    )
+
+    # 每个成功视频恰好触发一次 await 回调，并显式携带输入位置与来源
+    assert len(outcome.items) == 2
+    assert sorted(calls) == [(0, "1", True), (1, "2", True)]
+
+
+@as_sync
+async def test_resolve_ugc_video_lists_cancels_siblings_on_fatal_error(monkeypatch: pytest.MonkeyPatch):
+    first_started = asyncio.Event()
+
+    async def fake_get_ugc_video_list(scope: ExecutionScope, avid: object):
+        if str(avid) == "1":
+            first_started.set()
+            await asyncio.sleep(0.05)
+            return {"title": "视频 1", "pubdate": 1700000000, "avid": AId("1"), "pages": []}
+        raise RuntimeError("boom")
+
+    async def fake_touch_url(scope: ExecutionScope, url: str):
+        return Success(None)
+
+    monkeypatch.setattr("yutto.extractor.utils.batch.get_ugc_video_list", fake_get_ugc_video_list)
+    monkeypatch.setattr(Fetcher, "touch_url", fake_touch_url)
+
+    calls: list[int] = []
+
+    async def on_resolved(resolved: IndexedResolveItem[UgcVideoList]) -> None:
+        calls.append(resolved.index)
+
+    client = cast("Any", object())
+    scope = ExecutionScope(client)
+    # 单个未预期异常直接抛原始异常（而非 ExceptionGroup），wire 错误类型保持稳定
+    with pytest.raises(RuntimeError, match="boom"):
+        await resolve_ugc_video_lists(
+            scope,
+            [AId("1"), AId("2")],
+            publication_time_filter=PublicationTimeFilter.from_strings(None, None),
+            on_resolved=on_resolved,
+        )
+
+    # fatal error 会取消并等待兄弟协程：函数抛错后不会再有任何回调发生
+    assert first_started.is_set()
+    assert calls == []
+    await asyncio.sleep(0.1)
+    assert calls == []
+
+
+@as_sync
+async def test_resolve_ugc_video_lists_cancels_workers_when_callback_fails(monkeypatch: pytest.MonkeyPatch):
+    resolved: list[str] = []
+
+    async def fake_get_ugc_video_list(scope: ExecutionScope, avid: object):
+        if str(avid) == "2":
+            await asyncio.sleep(0.05)
+        resolved.append(str(avid))
+        return {"title": str(avid), "pubdate": 1700000000, "avid": avid, "pages": []}
+
+    async def fake_touch_url(scope: ExecutionScope, url: str):
+        return Success(None)
+
+    monkeypatch.setattr("yutto.extractor.utils.batch.get_ugc_video_list", fake_get_ugc_video_list)
+    monkeypatch.setattr(Fetcher, "touch_url", fake_touch_url)
+
+    async def on_resolved(resolved: IndexedResolveItem[UgcVideoList]) -> None:
+        raise RuntimeError("callback boom")
+
+    client = cast("Any", object())
+    scope = ExecutionScope(client)
+    with pytest.raises(RuntimeError, match="callback boom"):
+        await resolve_ugc_video_lists(
+            scope,
+            [AId("1"), AId("2")],
+            publication_time_filter=PublicationTimeFilter.from_strings(None, None),
+            on_resolved=on_resolved,
+        )
+
+    # 回调自身失败同样取消其余 worker：慢的 avid 2 不会再完成解析
+    assert resolved == ["1"]
+    await asyncio.sleep(0.1)
+    assert resolved == ["1"]
+
+
+@as_sync
+async def test_execute_resolve_keeps_genuinely_empty_source_as_success(monkeypatch: pytest.MonkeyPatch):
+    class EmptySourceExtractor(_ShortcutExtractorBase):
+        async def __call__(
+            self,
+            scope: ExecutionScope,
+            options: ExtractorOptions,
+        ) -> ExtractorResolveOutcome:
+            return ResolveOutcome()
+
+    _patch_resolve_environment(monkeypatch, EmptySourceExtractor)
+    manager = DownloadManager()
+    request = DownloadRequest.model_validate({"source": {"url": "BV1empty"}})
+
+    with bind_download_event_sink(RecordingEventSink()):
+        result = await manager.execute_resolve(RequestExecutionScopeFactory(), [request])
+
+    # 真正的空来源（如空收藏夹）仍是成功的空结果，与「全部解析失败」区分开
+    assert result == ResolveResult(items=())

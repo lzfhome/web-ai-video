@@ -1,0 +1,155 @@
+from __future__ import annotations
+
+import os
+import sys
+from typing import TYPE_CHECKING
+
+import biliass
+
+from yutto.auth import format_auth_inline, resolve_auth
+from yutto.exceptions import ErrorCode
+from yutto.input_parser import validate_batch_selection
+from yutto.media.codec import audio_codec_priority_default, video_codec_priority_default
+from yutto.utils.console.colorful import set_no_color
+from yutto.utils.console.logger import Logger, set_logger_debug
+from yutto.utils.fetcher import resolve_proxy
+from yutto.utils.ffmpeg import FFmpeg
+
+if TYPE_CHECKING:
+    import argparse
+
+    from yutto.auth import AuthInfo
+    from yutto.media.codec import VideoCodec
+
+
+def hydrate_auth(args: argparse.Namespace) -> AuthInfo | None:
+    if not args.auth and args.sessdata:
+        Logger.deprecated_warning('参数 --sessdata 已弃用，推荐改用 --auth="SESSDATA=...; bili_jct=..."')
+        args.auth = format_auth_inline(args.sessdata)
+
+    try:
+        return resolve_auth(args)
+    except ValueError as e:
+        Logger.error(str(e))
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+
+
+def initial_validation(args: argparse.Namespace):
+    """初始化检查，仅执行一次"""
+
+    if not args.no_progress and sys.stdout.isatty():
+        Logger.enable_statusbar()
+
+    # 在使用 --no-color 或者环境变量 NO_COLOR 非空时都应该不显示颜色
+    # See also: https://no-color.org/
+    if args.no_color or os.environ.get("NO_COLOR"):
+        set_no_color()
+
+    # debug 设置
+    if args.debug:
+        set_logger_debug()
+        biliass.enable_tracing()
+
+
+def validate_basic_arguments(args: argparse.Namespace):
+    """检查 argparse 无法检查的选项，并设置某些全局的状态"""
+
+    ffmpeg = FFmpeg()
+
+    # fetch_workers 检查
+    if args.fetch_workers < 1:
+        Logger.error(f"fetch_workers 参数值（{args.fetch_workers}）不满足要求哦（应为不小于 1 的整数）")
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+
+    # num_workers 检查
+    if args.num_workers < 1:
+        Logger.error(f"num_workers 参数值（{args.num_workers}）不满足要求哦（应为不小于 1 的整数）")
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+
+    if args.jobs < 1:
+        Logger.error(f"jobs 参数值（{args.jobs}）不满足要求哦（应为不小于 1 的整数）")
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+
+    try:
+        resolve_proxy(args.proxy)
+    except ValueError as e:
+        Logger.error(str(e))
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+
+    download_vcodec_priority: list[VideoCodec] = video_codec_priority_default
+    if args.download_vcodec_priority is not None:
+        user_download_vcodec_priority = args.download_vcodec_priority
+        if not user_download_vcodec_priority:
+            Logger.error("download_vcodec_priority 参数值为空哦")
+            sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+        for vcodec in user_download_vcodec_priority:
+            if vcodec not in video_codec_priority_default:
+                Logger.error(
+                    "download_vcodec_priority 参数值（{}）不满足要求哦（允许值：{{{}}}）".format(
+                        vcodec, ", ".join(video_codec_priority_default)
+                    )
+                )
+                sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+        download_vcodec_priority = user_download_vcodec_priority
+        if len(download_vcodec_priority) < len(video_codec_priority_default):
+            Logger.warning(
+                "download_vcodec_priority（{}）不包含所有下载视频编码（{}），不包含部分将永远不会选择哦".format(
+                    ", ".join(args.download_vcodec_priority), ", ".join(video_codec_priority_default)
+                )
+            )
+
+    # vcodec 检查
+    vcodec_split = args.vcodec.split(":")
+    if len(vcodec_split) != 2:
+        Logger.error(f"vcodec 参数值（{args.vcodec}）不满足要求哦（并非使用 : 分隔的值）")
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+    video_download_codec, video_save_codec = vcodec_split
+    if video_download_codec not in download_vcodec_priority:
+        Logger.error(
+            "download_vcodec 参数值（{}）不满足要求哦（允许值：{{{}}}）".format(
+                video_download_codec, ", ".join(download_vcodec_priority)
+            )
+        )
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+    if args.download_vcodec_priority is not None and download_vcodec_priority[0] != video_download_codec:
+        Logger.warning(
+            f"download_vcodec 参数值（{video_download_codec}）不是优先级最高的编码（{download_vcodec_priority[0]}），可能会导致下载失败哦"
+        )
+    if video_save_codec not in ffmpeg.video_encodecs + ["copy"]:
+        Logger.error(
+            "save_vcodec 参数值（{}）不满足要求哦（允许值：{{{}}}）".format(
+                video_save_codec, ", ".join(ffmpeg.video_encodecs + ["copy"])
+            )
+        )
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+
+    # acodec 检查
+    acodec_split = args.acodec.split(":")
+    if len(acodec_split) != 2:
+        Logger.error(f"acodec 参数值（{args.acodec}）不满足要求哦（并非使用 : 分隔的值）")
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+    audio_download_codec, audio_save_codec = acodec_split
+    if audio_download_codec not in audio_codec_priority_default:
+        Logger.error(
+            "download_acodec 参数值（{}）不满足要求哦（允许值：{{{}}}）".format(
+                audio_download_codec, ", ".join(audio_codec_priority_default)
+            )
+        )
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+    if audio_save_codec not in ffmpeg.audio_encodecs + ["copy"]:
+        Logger.error(
+            "save_acodec 参数值（{}）不满足要求哦（允许值：{{{}}}）".format(
+                audio_save_codec, ", ".join(ffmpeg.audio_encodecs + ["copy"])
+            )
+        )
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+
+    # cover 检查
+    if not args.require_cover and args.save_cover:
+        Logger.warning("没有下载封面的情况下是无法保留封面的哦～")
+        sys.exit(ErrorCode.WRONG_ARGUMENT_ERROR.value)
+
+
+def validate_batch_arguments(args: argparse.Namespace):
+    """检查批量下载相关选项"""
+    validate_batch_selection(args.episodes)

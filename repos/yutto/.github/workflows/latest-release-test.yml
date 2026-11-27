@@ -1,0 +1,84 @@
+name: Latest Release Test
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  test-yutto-latest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.14t", "3.15", "3.15t"]
+        architecture: ["x64"]
+    name: Python ${{ matrix.python-version }} on ${{ matrix.architecture }} latest release test
+    env:
+      # uv otherwise prefers an installed stable interpreter over a prerelease.
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+
+      - name: Install python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.architecture }}
+          allow-prereleases: true
+
+      - name: Install tools
+        run: |
+          sudo apt update
+          sudo apt install ffmpeg
+
+      - parallel:
+          - name: Test yutto from source
+            env:
+              UV_CACHE_DIR: ${{ runner.temp }}/uv-cache-yutto-source
+              TMPDIR: ${{ runner.temp }}/tmp-yutto-source
+              TEMP: ${{ runner.temp }}/tmp-yutto-source
+              TMP: ${{ runner.temp }}/tmp-yutto-source
+              YUTTO_OUTPUT_DIR: ${{ runner.temp }}/output-yutto-source
+            run: |
+              mkdir -p "$TMPDIR" "$YUTTO_OUTPUT_DIR"
+              uv cache clean
+              uvx --no-binary-package=yutto yutto@latest -v
+              uvx --no-binary-package=yutto yutto@latest -h
+              uvx --no-binary-package=yutto yutto@latest https://www.bilibili.com/video/BV1AZ4y147Yg -w --no-progress --dir "$YUTTO_OUTPUT_DIR" --tmp-dir "$TMPDIR"
+
+          - name: Test yutto from wheel
+            env:
+              UV_CACHE_DIR: ${{ runner.temp }}/uv-cache-yutto-wheel
+              TMPDIR: ${{ runner.temp }}/tmp-yutto-wheel
+              TEMP: ${{ runner.temp }}/tmp-yutto-wheel
+              TMP: ${{ runner.temp }}/tmp-yutto-wheel
+              YUTTO_OUTPUT_DIR: ${{ runner.temp }}/output-yutto-wheel
+            run: |
+              mkdir -p "$TMPDIR" "$YUTTO_OUTPUT_DIR"
+              uv cache clean
+              uvx yutto@latest -v
+              uvx yutto@latest -h
+              uvx yutto@latest https://www.bilibili.com/video/BV1AZ4y147Yg -w --no-progress --dir "$YUTTO_OUTPUT_DIR" --tmp-dir "$TMPDIR"
+
+          - name: Prepare data for biliass
+            run: |
+              git clone https://github.com/yutto-dev/biliass-corpus.git --depth 1
+
+      - name: Test biliass from source
+        run: |
+          uv cache clean
+          uvx --no-binary-package=biliass biliass@latest -v
+          uvx --no-binary-package=biliass biliass@latest -h
+          uvx --no-binary-package=biliass biliass@latest biliass-corpus/corpus/xml/18678311.xml -s 1920x1080 -f xml -o xml.ass
+          uvx --no-binary-package=biliass biliass@latest biliass-corpus/corpus/protobuf/18678311/18678311-*.pb -s 1920x1080 -f protobuf -o protobuf.ass
+
+      - name: Test biliass from wheel
+        run: |
+          uv cache clean
+          uvx biliass@latest -v
+          uvx biliass@latest -h
+          uvx biliass@latest biliass-corpus/corpus/xml/18678311.xml -s 1920x1080 -f xml -o xml.ass
+          uvx biliass@latest biliass-corpus/corpus/protobuf/18678311/18678311-*.pb -s 1920x1080 -f protobuf -o protobuf.ass

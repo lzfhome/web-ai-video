@@ -1,0 +1,44 @@
+name: VitePress Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          working-directory: ./docs
+          node-version: '26'
+          cache: true
+          run-install: |
+            args: ['--frozen-lockfile']
+
+      - name: Build VitePress site
+        working-directory: ./docs
+        run: vp run build
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          personal_token: ${{ secrets.PERSONAL_TOKEN }}
+          publish_dir: docs/.vitepress/dist
+          external_repository: SigureMo/docs
+          publish_branch: yutto
+          force_orphan: true
+          commit_message: ":rocket: deploy: "
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"

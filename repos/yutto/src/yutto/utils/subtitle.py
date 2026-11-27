@@ -1,0 +1,73 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import TYPE_CHECKING, TypedDict
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+SubtitleLineData = TypedDict(
+    "SubtitleLineData",
+    {
+        "content": str,
+        "from": int,  # This attribute is a keyword in Python, so it can not convert to class syntax
+        "to": int,
+    },
+)
+
+SubtitleData = list[SubtitleLineData]
+
+
+def matches_subtitle_language(code: str, languages: Sequence[str] | None) -> bool:
+    """Match language codes and their variants; None selects all, [] selects none."""
+    if languages is None:
+        return True
+    code = code.lower()
+    for language in languages:
+        language = language.strip().lower()
+        for candidate in (code, code.removeprefix("ai-")):
+            if candidate == language or candidate.startswith(language + "-"):
+                return True
+    return False
+
+
+class Subtitle:
+    """播放列表类"""
+
+    def __init__(self):
+        self._text = ""
+        self._count = 0
+
+    def write_line(self, string: str):
+        self._text += string + "\n"
+
+    @staticmethod
+    def time_format(seconds: float):
+        total_ms = round(seconds * 1000)
+        total_seconds, ms = divmod(total_ms, 1000)
+        minutes, sec = divmod(total_seconds, 60)
+        hour, min = divmod(minutes, 60)
+        return f"{hour:02}:{min:02}:{sec:02},{ms:03}"
+
+    def write_subtitle(self, subtitle_line_data: SubtitleLineData) -> None:
+        self._count += 1
+        self.write_line(str(self._count))
+        self.write_line(
+            "{} --> {}".format(self.time_format(subtitle_line_data["from"]), self.time_format(subtitle_line_data["to"]))
+        )
+        self.write_line(subtitle_line_data["content"] + "\n")
+
+    def __str__(self) -> str:
+        return self._text
+
+
+def write_subtitle(subtitle_data: SubtitleData, video_path: Path, lang: str) -> Path:
+    video_path = Path(video_path)
+    video_name = video_path.stem
+    sub = Subtitle()
+    subtitle_path = video_path.with_name(f"{video_name}.{lang}.srt")
+    for subline in subtitle_data:
+        sub.write_subtitle(subline)
+    with subtitle_path.open("w", encoding="utf-8") as f:
+        f.write(str(sub))
+    return subtitle_path

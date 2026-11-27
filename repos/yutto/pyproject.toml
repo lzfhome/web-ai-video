@@ -1,0 +1,142 @@
+[project]
+name = "yutto"
+version = "2.3.1"
+description = "🧊 一个可爱且任性的 B 站视频下载器"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Nyakku Shigure", email = "sigure.qaq@gmail.com" }]
+keywords = ["python", "bilibili", "video", "downloader", "danmaku"]
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+classifiers = [
+  "Environment :: Console",
+  "Operating System :: OS Independent",
+  "Typing :: Typed",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = [
+  "biliass==2.5.0",
+  "colorama>=0.4.6; sys_platform == 'win32'",
+  "typing-extensions>=4.16.0",
+  "dict2xml>=1.7.8",
+  "pydantic>=2.14.0",
+  "returns>=0.29.0",
+  "segno>=1.6.6",
+  "websockets>=17,<18",
+]
+
+[project.urls]
+Homepage = "https://github.com/yutto-dev/yutto"
+Documentation = "https://github.com/yutto-dev/yutto"
+Repository = "https://github.com/yutto-dev/yutto"
+Issues = "https://github.com/yutto-dev/yutto/issues"
+
+[project.scripts]
+yutto = "yutto.__main__:main"
+
+[dependency-groups]
+dev = [
+  "aiofiles>=25.1.0",
+  "ty>=0.0.107",
+  "ruff>=0.17.6",
+  "typos>=1.52.2",
+  "pytest>=9.2.0",
+  "pytest-rerunfailures>=16.7",
+  "syrupy>=7.0.3",
+  "pytest-codspeed>=5.0.4",
+]
+
+[tool.uv]
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "rust/Cargo.toml" },
+  { file = "rust/Cargo.lock" },
+  { file = "rust/crates/*/Cargo.toml" },
+  { file = "rust/crates/*/src/**/*.rs" },
+  { env = "MATURIN_PEP517_ARGS" },
+  { env = "RUSTFLAGS" },
+]
+
+[tool.uv.sources]
+biliass = { workspace = true }
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.pytest]
+markers = ["api", "e2e", "processor", "biliass", "ignore", "ci_skip", "ci_only"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+  # Pyflakes
+  "F",
+  # Pycodestyle
+  "E",
+  "W",
+  # Isort
+  "I",
+  # Comprehensions
+  "C4",
+  # Debugger
+  "T100",
+  # Pyupgrade
+  "UP",
+  # Flake8-pyi
+  "PYI",
+  # Bugbear
+  "B",
+  # Pylint
+  "PLE",
+  # Flake8-simplify
+  "SIM101",
+  # Flake8-use-pathlib
+  "PTH",
+  # Pygrep-hooks
+  "PGH004",
+  # Flake8-type-checking
+  "TC",
+  # Flake8-raise
+  "RSE",
+  # Refurb
+  "FURB",
+  # Flake8-future-annotations
+  "FA",
+  # Yesqa
+  "RUF100",
+]
+ignore = [
+  "E501", # line too long, duplicate with ruff fmt
+]
+future-annotations = true
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+known-first-party = ["yutto"]
+combine-as-imports = true
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+
+[tool.ruff.lint.per-file-ignores]
+"setup.py" = ["I"]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+manifest-path = "rust/crates/yutto/Cargo.toml"
+module-name = "yutto._core"
+python-source = "src"
+
+[build-system]
+requires = ["maturin>=1.14.1,<2.0"]
+build-backend = "maturin"

@@ -1,0 +1,16 @@
+{
+  "python.languageServer": "None",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.analysis.inlayHints.functionReturnTypes": true,
+  "python.analysis.inlayHints.variableTypes": true,
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "rust-analyzer.linkedProjects": ["${workspaceFolder}/packages/biliass/rust/Cargo.toml"],
+  "search.exclude": {
+    "**/*.ambr": true,
+    "**/*.xml": true,
+    "**/*.pb": true
+  },
+  "oxc.fmt.configPath": "./docs/vite.config.ts"
+}

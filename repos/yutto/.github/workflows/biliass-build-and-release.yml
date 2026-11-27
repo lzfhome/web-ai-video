@@ -1,0 +1,37 @@
+name: Build and Release (biliass)
+
+on:
+  push:
+    tags:
+      - "biliass*" # Push events to matching biliass*, i.e. biliass@1.0.0
+    branches:
+      - main
+    paths:
+      - "packages/biliass/**"
+      - ".github/workflows/biliass-build-and-release.yml"
+      - ".github/workflows/build-and-release.yml"
+  pull_request:
+    paths:
+      - "packages/biliass/**"
+      - ".github/workflows/biliass-build-and-release.yml"
+      - ".github/workflows/build-and-release.yml"
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-release:
+    uses: ./.github/workflows/build-and-release.yml
+    with:
+      working-directory: packages/biliass
+      artifact-prefix: wheels
+      release-ref-prefix: refs/tags/biliass
+    permissions:
+      contents: write
+      id-token: write

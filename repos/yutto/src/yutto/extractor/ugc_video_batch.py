@@ -1,0 +1,99 @@
+from __future__ import annotations
+
+import re
+from typing import TYPE_CHECKING
+
+from yutto.api.ugc_video import get_ugc_video_list
+from yutto.core.operation import ReportLevel, emit_download_report
+from yutto.exceptions import NoAccessPermissionError, NotFoundError
+from yutto.extractor._abc import BatchExtractor
+from yutto.extractor.common import make_ugc_video_episode
+from yutto.extractor.outcome import ResolveOutcome
+from yutto.input_parser import parse_episodes_selection
+from yutto.types import AId, BvId
+
+if TYPE_CHECKING:
+    from yutto.core.execution import ExecutionScope
+    from yutto.extractor._abc import EpisodeListedCallback, ExtractorResolveOutcome
+    from yutto.types import AvId, ExtractorOptions
+
+
+class UgcVideoBatchExtractor(BatchExtractor):
+    """投稿视频批下载"""
+
+    REGEX_AV = re.compile(r"https?://www\.bilibili\.com/video/av(?P<aid>\d+)/?")
+    REGEX_BV = re.compile(r"https?://www\.bilibili\.com/video/(?P<bvid>(bv|BV)\w+)/?")
+
+    REGEX_AV_ID = re.compile(r"av(?P<aid>\d+)(\?p=(?P<page>\d+))?")
+    REGEX_BV_ID = re.compile(r"(?P<bvid>(bv|BV)\w+)(\?p=(?P<page>\d+))?")
+
+    REGEX_BV_SPECIAL_PAGE = re.compile(r"https?://www\.bilibili\.com/festival/.+(?P<bvid>(bv|BV)\w+)")
+
+    avid: AvId
+
+    def resolve_shortcut(self, id: str) -> tuple[bool, str]:
+        matched = False
+        url = id
+        if match_obj := self.REGEX_AV_ID.match(id):
+            page: int = 1
+            if match_obj.group("page") is not None:
+                page = int(match_obj.group("page"))
+            url = f"https://www.bilibili.com/video/av{match_obj.group('aid')}?p={page}"
+            matched = True
+        elif match_obj := self.REGEX_BV_ID.match(id):
+            page: int = 1
+            if match_obj.group("page") is not None:
+                page = int(match_obj.group("page"))
+            url = f"https://www.bilibili.com/video/{match_obj.group('bvid')}?p={page}"
+            matched = True
+        return matched, url
+
+    def match(self, url: str) -> bool:
+        if (
+            (match_obj := self.REGEX_AV.match(url))
+            or (match_obj := self.REGEX_BV.match(url))
+            or (match_obj := self.REGEX_BV_SPECIAL_PAGE.match(url))
+        ):
+            if "aid" in match_obj.groupdict().keys():
+                self.avid = AId(match_obj.group("aid"))
+            else:
+                self.avid = BvId(match_obj.group("bvid"))
+            return True
+        else:
+            return False
+
+    async def extract(
+        self,
+        scope: ExecutionScope,
+        options: ExtractorOptions,
+        *,
+        on_item: EpisodeListedCallback | None = None,
+    ) -> ExtractorResolveOutcome:
+        try:
+            ugc_video_list = await get_ugc_video_list(scope, self.avid)
+            emit_download_report(ugc_video_list["title"], badge="投稿视频")
+        except (NotFoundError, NoAccessPermissionError) as e:
+            # 由于获取 info 时候也会因为视频不存在而报错，因此这里需要捕捉下
+            emit_download_report(e.message, ReportLevel.ERROR)
+            return ResolveOutcome(failures=(e,))
+
+        # 选集过滤
+        episodes = parse_episodes_selection(options["episodes"], len(ugc_video_list["pages"]))
+        ugc_video_list["pages"] = list(filter(lambda item: item["id"] in episodes, ugc_video_list["pages"]))
+
+        return ResolveOutcome(
+            items=tuple(
+                make_ugc_video_episode(
+                    scope,
+                    ugc_video_item["avid"],
+                    ugc_video_item,
+                    options,
+                    {
+                        "title": ugc_video_list["title"],
+                        "pubdate": ugc_video_list["pubdate"],
+                    },
+                    "{title}/{name}",
+                )
+                for ugc_video_item in ugc_video_list["pages"]
+            )
+        )

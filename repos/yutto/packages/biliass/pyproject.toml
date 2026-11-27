@@ -1,0 +1,56 @@
+[project]
+name = "biliass"
+description = "💬 将 B 站 XML/protobuf 弹幕转换为 ASS 弹幕"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+  { name = "Star Brilliant", email = "m13253@hotmail.com" },
+  { name = "Nyakku Shigure", email = "sigure.qaq@gmail.com" },
+]
+keywords = ["bilibili", "yutto", "danmaku", "ASS"]
+license = "GPL-3.0-only"
+license-files = ["LICENSE"]
+classifiers = [
+  "Operating System :: OS Independent",
+  "Programming Language :: Rust",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Free Threading :: 4 - Resilient",
+]
+dependencies = []
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/yutto-dev/yutto/tree/main/packages/biliass"
+Documentation = "https://github.com/yutto-dev/yutto/tree/main/packages/biliass"
+Repository = "https://github.com/yutto-dev/yutto"
+Issues = "https://github.com/yutto-dev/yutto/issues"
+
+[project.scripts]
+biliass = "biliass.__main__:main"
+
+[tool.uv]
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "rust/Cargo.toml" },
+  { file = "rust/Cargo.lock" },
+  { file = "rust/build.rs" },
+  { file = "rust/src/**/*.rs" },
+  { file = "rust/proto/**/*.proto" },
+  { env = "MATURIN_PEP517_ARGS" },
+  { env = "RUSTFLAGS" },
+]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+module-name = "biliass._core"
+
+[build-system]
+requires = ["maturin>=1.14.1,<2.0"]
+build-backend = "maturin"

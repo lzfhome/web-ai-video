@@ -1,0 +1,171 @@
+name: Unit Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+jobs:
+  unit-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.14t", "3.15", "3.15t"]
+        architecture: ["x64"]
+    name: Python ${{ matrix.python-version }} on ${{ matrix.architecture }} unit test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Install python
+        id: python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.architecture }}
+          allow-prereleases: true
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Prepare wheel cache identity
+        id: wheels
+        run: python scripts/prepare-ci-cache.py
+
+      - name: Install uv
+        id: uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: ""
+          cache-suffix: ci-wheels-${{ steps.wheels.outputs.cache-key }}
+          prune-cache: true
+
+      - name: Cache native build dependencies
+        if: steps.uv.outputs.cache-hit != 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            rust
+            packages/biliass/rust
+          shared-key: native-${{ matrix.python-version }}-${{ steps.python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml', 'uv.lock') }}
+          env-vars: ImageOS PYO3 PYTHON MATURIN UV YUTTO_CI_BUILD_ENV_KEY
+          cache-bin: false
+
+      - name: Install just
+        uses: extractions/setup-just@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          just ci-install ${{ matrix.python-version }}
+
+      - name: Run unit tests
+        run: |
+          just ci-test ${{ matrix.python-version }}
+
+  benchmarks:
+    name: Python 3.14 benchmarks (CodSpeed)
+    runs-on: ubuntu-latest
+    # Preserve PR comparisons, main baselines and manual runs, but not merge
+    # groups or workflows running in forks. No needs: unit tests finish separately.
+    if: ${{ github.event_name != 'merge_group' && !github.event.repository.fork }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Install python
+        id: python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.15"
+          architecture: x64
+          allow-prereleases: true
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Prepare wheel cache identity
+        id: wheels
+        run: python scripts/prepare-ci-cache.py
+
+      - name: Install uv
+        id: uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: ""
+          cache-suffix: ci-wheels-${{ steps.wheels.outputs.cache-key }}
+          prune-cache: true
+
+      - name: Cache native build dependencies
+        if: steps.uv.outputs.cache-hit != 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            rust
+            packages/biliass/rust
+          shared-key: native-3.14-${{ steps.python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml', 'uv.lock') }}
+          env-vars: ImageOS PYO3 PYTHON MATURIN UV YUTTO_CI_BUILD_ENV_KEY
+          cache-bin: false
+
+      - name: Install just
+        uses: extractions/setup-just@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          just ci-install 3.14
+
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@v5
+        with:
+          mode: simulation
+          run: uv run -p 3.14 pytest --codspeed
+
+  unit-test-rust:
+    name: yutto Rust unit test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run unit tests
+        working-directory: rust
+        run: cargo test --all-targets --all-features
+
+  unit-test-rust-msrv:
+    name: yutto Rust 1.85 compatibility
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Rust 1.85 toolchain
+        uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: clippy
+
+      - name: Check MSRV compatibility
+        working-directory: rust
+        run: |
+          cargo check --locked --all-targets --all-features
+          cargo clippy --locked --all-targets --all-features -- -D warnings
+          cargo test --locked --all-targets --all-features

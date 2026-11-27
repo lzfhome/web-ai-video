@@ -1,0 +1,129 @@
+name: Lint and Format
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+jobs:
+  lint-and-fmt-python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+        architecture: ["x64"]
+    name: Lint and Format (Python)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install python
+        id: python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: ${{ matrix.architecture }}
+          allow-prereleases: true
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Prepare wheel cache identity
+        id: wheels
+        run: python scripts/prepare-ci-cache.py
+
+      - name: Install uv
+        id: uv
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+          cache-dependency-glob: ""
+          cache-suffix: ci-wheels-${{ steps.wheels.outputs.cache-key }}
+          prune-cache: true
+
+      - name: Cache native build dependencies
+        if: steps.uv.outputs.cache-hit != 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            rust
+            packages/biliass/rust
+          shared-key: native-${{ matrix.python-version }}-${{ steps.python.outputs.python-version }}-${{ hashFiles('**/pyproject.toml', 'uv.lock') }}
+          env-vars: ImageOS PYO3 PYTHON MATURIN UV YUTTO_CI_BUILD_ENV_KEY
+          cache-bin: false
+
+      - name: Install just
+        uses: extractions/setup-just@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          just ci-install ${{ matrix.python-version }}
+
+      - name: lint
+        run: |
+          just ci-lint
+
+      - name: format check
+        run: |
+          just ci-fmt-check
+
+  lint-and-fmt-rust:
+    name: Lint and Format (Rust)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+      - uses: actions/cache@v6
+        id: cargo-cache
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Format with rustfmt
+        working-directory: packages/biliass/rust
+        run: |
+          cargo fmt --all -- --check
+      - name: Lint with clippy
+        working-directory: packages/biliass/rust
+        run: |
+          cargo clippy --all-targets --all-features -- -D warnings
+      - name: Format yutto Rust workspace with rustfmt
+        working-directory: rust
+        run: |
+          cargo fmt --all -- --check
+      - name: Lint yutto Rust workspace with clippy
+        working-directory: rust
+        run: |
+          cargo clippy --all-targets --all-features -- -D warnings
+
+  lint-and-fmt-docs:
+    name: Lint and Format (Docs)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          working-directory: ./docs
+          node-version: '26'
+          cache: true
+          run-install: |
+            args: ['--frozen-lockfile']
+
+      - name: Lint, format and type check
+        working-directory: ./docs
+        run: vp check
