@@ -301,6 +301,20 @@ def cmd_render(a):
             args += ["--fps", a.fps]
         if a.no_bgm:
             args.append("--no-bgm")
+    elif line == "fe-gba":
+        args = [lesson]
+        if a.shot_id:
+            args += ["--shot", a.shot_id]
+        if a.keyframe_only:
+            args.append("--keyframe-only")
+        if a.skip_keyframe:
+            args.append("--skip-keyframe")
+        if a.force:
+            args.append("--force")
+        if a.force_keyframe:
+            args.append("--force-keyframe")
+        if a.yes:
+            args.append("--yes")
     elif line in ("dom-narrated", "poetry", "poetry-tts"):
         args = [lesson, "--workers", a.workers, "--shot", a.shot, "--tts", a.tts,
                 "--encoder", a.encoder, "--port", a.port]
@@ -335,6 +349,10 @@ def cmd_deliver(a):
 def cmd_qa(a):
     ws, project = resolve_project(a.project)
     lesson = a.lesson or resolve_lesson(project)
+    if project_line(project) == "fe-gba":
+        run(ws / "line" / "fe-gba" / "qa.py", [lesson], cwd=project,
+            env={"CINE_ROOT": str(project)})
+        return
     video = project / "lessons" / lesson / "build" / f"lesson{lesson}.mp4"
     if not video.exists():
         raise SystemExit(f"找不到成片：{video}，先 render")
@@ -374,10 +392,16 @@ def main():
     p.add_argument("project")
     p.add_argument("--lesson", default=None)
     p.add_argument("--line", default=None,
-                   choices=["canvas-bgm", "dom-narrated", "poetry", "poetry-tts"])
+                   choices=["canvas-bgm", "dom-narrated", "poetry", "poetry-tts", "fe-gba"])
     p.add_argument("--fps", type=int, default=None)
     p.add_argument("--workers", type=int, default=1)
     p.add_argument("--shot", default="jpeg", choices=["jpeg", "png"])
+    p.add_argument("--shot-id", default=None, help="fe-gba：只跑某个镜头，如 S01")
+    p.add_argument("--yes", action="store_true", help="fe-gba：真正调用付费 API；默认 dry-run")
+    p.add_argument("--force", action="store_true", help="fe-gba：允许覆盖已存在的视频")
+    p.add_argument("--force-keyframe", action="store_true", help="fe-gba：允许覆盖已存在的帧图")
+    p.add_argument("--keyframe-only", action="store_true", help="fe-gba：只生成帧图")
+    p.add_argument("--skip-keyframe", action="store_true", help="fe-gba：跳过帧图，用已有帧图出视频")
     p.add_argument("--hw", default="no-preference",
                    choices=["no-preference", "prefer-hardware", "prefer-software"])
     p.add_argument("--quality", type=int, default=20_000_000)

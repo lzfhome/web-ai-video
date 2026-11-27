@@ -1,0 +1,38 @@
+{
+  "title": "圣魔之光石 · Eirika · 5s 720p",
+  "source": "Fire Emblem: The Sacred Stones / Serenes Forest — https://serenesforest.net/gallery/sacred-stones/",
+  "story": "Renais 被 Grado 入侵后，Eirika 在城堡庭院里迎战逼近的敌军。",
+  "style": "GBA 火焰纹章官方插画风格，赛璐璐上色，清晰轮廓，复古奇幻色调",
+  "style_lock": "绿色长发、红色上衣、金色胸甲、白色短裙、蓝色裙边、红色长靴、金色护肩、细剑；不要改成纯白连衣裙，不要改变脸型和发型。",
+  "characters": {
+    "Eirika": "assets/eirika-serenes.jpg"
+  },
+  "shots": [
+    {
+      "id": "S01_eirika",
+      "title": "Eirika · Renais 庭院",
+      "story": "Eirika 在 Renais 城堡庭院中面对逼近的 Grado 军队，缓缓拔剑。",
+      "reference_images": [
+        "assets/eirika-serenes.jpg"
+      ],
+      "keyframe": "build/S01_eirika_keyframe.png",
+      "keyframe_prompt": "16:9 横构图，GBA 火焰纹章官方插画风格：Eirika 站在 Renais 城堡石砌庭院中央，绿色长发、红色上衣、金色胸甲、白色短裙、蓝色裙边、红色长靴、金色护肩，细剑已出鞘，剑尖斜指地面；背景远处 Grado 士兵和旗帜，暖色夕阳、冷色阴影、地面薄尘；全身构图，人物完整，无文字，无 UI，无 watermark。",
+      "video_prompt": "从首帧开始，Eirika 将细剑缓缓抬至胸前，剑尖斜指前方，随后抬眼看向镜头；披风与绿色长发随风摆动，地面尘土轻微扬起；镜头缓慢推近，保持 16:9；远处 Grado 士兵保持队形，旗帜在风中飘动；严格保持原画的红色上衣、金色胸甲、白裙蓝边、红靴、金护肩、绿长发和细剑，不要改成纯白连衣裙，不要改变脸型；无文字，无 UI，无水印。",
+      "action": {
+        "start": "细剑已出鞘，剑尖斜指地面",
+        "middle": "缓慢抬剑至胸前，披风与长发被风吹起",
+        "end": "剑尖斜指前方，抬眼看向镜头"
+      },
+      "camera": "slow push-in, eye level, 16:9",
+      "mode": "first_frame",
+      "duration": 5,
+      "resolution": "720p",
+      "ratio": "16:9",
+      "seed": 20261125,
+      "max_takes": 1,
+      "generate_audio": false,
+      "model": "doubao-seedance-2-5-flash-261115",
+      "video": "build/S01_eirika.mp4"
+    }
+  ]
+}

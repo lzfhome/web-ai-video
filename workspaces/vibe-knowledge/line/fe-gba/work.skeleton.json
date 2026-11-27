@@ -1,0 +1,36 @@
+{
+  "_comment": "复制成 lessons/<lesson>/work.json；先写剧情/动作/镜头，再写 prompt。路径相对 lesson 目录。三段闸门：提示词确认 → 帧图确认 → 用户许可后才出视频；每次生成都在侧边栏打开。",
+  "title": "",
+  "source": "",
+  "story": "",
+  "style": "GBA 火焰纹章官方插画风格，赛璐璐上色，清晰轮廓，复古奇幻色调",
+  "style_lock": "",
+  "characters": {},
+  "shots": [
+    {
+      "id": "S01",
+      "title": "",
+      "story": "",
+      "reference_images": [
+        "assets/ref.png"
+      ],
+      "keyframe": "build/S01_keyframe.png",
+      "keyframe_prompt": "",
+      "video_prompt": "",
+      "video": "build/S01.mp4",
+      "model": "doubao-seedance-2-5-flash-261115",
+      "action": {
+        "start": "",
+        "middle": "",
+        "end": ""
+      },
+      "camera": "slow push-in, eye level, 16:9",
+      "mode": "first_frame",
+      "duration": 5,
+      "resolution": "720p",
+      "ratio": "16:9",
+      "seed": 20261125,
+      "generate_audio": false
+    }
+  ]
+}
