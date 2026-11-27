@@ -160,6 +160,14 @@
     return !!(CFG && CFG.image_models && CFG.image_models[id]);
   }
 
+  // 5.5 / 5.0 pro / 5.0 flash：单图生成，不支持组图，参考图上限 10 张
+  const IMG_NO_SEQ = new Set([
+    "doubao-seedream-5-5-261028",
+    "doubao-seedream-5-0-pro-260628",
+    "doubao-seedream-5-0-flash-260915",
+  ]);
+  const imageMaxRefs = (id) => (IMG_NO_SEQ.has(id) ? 10 : 14);
+
   function capsFor(model) {
     return (CFG && CFG.model_caps && CFG.model_caps[model]) || {
       resolutions: ["480p", "720p", "1080p"], max_duration: 15,
@@ -185,8 +193,12 @@
       $("extend-tags").hidden = true;
       $("extend-tips").hidden = true;
       $("extend-mode").hidden = true;
-      const pro = model === "doubao-seedream-5-0-pro-260628";
-      $("img-seq-wrap").style.display = pro ? "none" : "";
+      const noSeq = IMG_NO_SEQ.has(model);
+      $("img-seq-wrap").style.display = noSeq ? "none" : "";
+      if (noSeq) $("img-seq").checked = false;
+      const fourK = $("img-size").querySelector('option[value="4K"]');
+      if (fourK) fourK.disabled = noSeq;
+      if (noSeq && $("img-size").value === "4K") $("img-size").value = "2K";
       toggleStoryPills(false);
       return;
     }
@@ -538,6 +550,7 @@
   /* ---- 单条视频 ---- */
   function prepareSingle() {
     const prompt = $("prompt").value.trim();
+    const model = $("model").value;
     const content = [];
     if (prompt) content.push({ type: "text", text: prompt });
     for (const it of mediaItems) {
@@ -549,8 +562,12 @@
     const hasMedia = content.some((c) => c.type !== "text");
     if (!hasMedia && !prompt) { toast("请填写提示词或添加素材", true); return; }
     const audioOnly = content.length === 1 && content[0].type === "audio_url";
-    if (audioOnly) { toast("音频不能单独使用，需配合图片或视频", true); return; }
-    const caps = capsFor($("model").value);
+    // Seedance 2.5 / 2.5 flash 支持单独输入音频；2.0 系列不支持
+    if (audioOnly && !model.includes("seedance-2-5")) {
+      toast("音频不能单独使用，需配合图片或视频；Seedance 2.5 系列可单独输入音频", true);
+      return;
+    }
+    const caps = capsFor(model);
     if (mediaItems.length > caps.max_media) { toast(`素材超过上限 ${caps.max_media} 个`, true); return; }
 
     const taskType = $("task-type").value;
@@ -565,7 +582,7 @@
       return;
     }
     const body = {
-      model: $("model").value,
+      model,
       content,
       resolution: $("resolution").value,
       ratio: $("ratio").disabled ? "adaptive" : $("ratio").value,
@@ -577,7 +594,7 @@
       omni_reference_task_type: taskType,
     };
     // 官方限制：2.5 首帧/尾帧生视频 ratio 必须为 adaptive
-    if ($("model").value.includes("seedance-2-5") &&
+    if (model.includes("seedance-2-5") &&
         content.some((it) => it.type === "image_url" && (it.role === "first_frame" || it.role === "last_frame"))) {
       body.ratio = "adaptive";
     }
@@ -618,9 +635,9 @@
     const seq = $("img-seq").checked;
     const n = seq ? 1 : Math.min(4, Math.max(1, parseInt($("img-n").value) || 1));
     const size = $("img-size").value;
-    // 官方限制：pro 多图生图参考 2-10 张，lite 2-14 张
+    // 官方限制：5.5 / 5.0 pro / 5.0 flash 参考图 2-10 张，旧版 lite / 4.x 2-14 张
     if (imgRefs.length) {
-      const max = model.includes("pro") ? 10 : 14;
+      const max = imageMaxRefs(model);
       if (imgRefs.length > max) {
         toast(`参考图最多 ${max} 张（官方限制），当前 ${imgRefs.length} 张`, true);
         return;
@@ -1480,9 +1497,46 @@
     task: { auto: "自动判断", text: "文生视频", image: "图生视频", edit: "视频编辑", extend: "视频延长" },
     role: { first_frame: "首帧图", last_frame: "尾帧图", reference_image: "参考图" },
   };
-  const IMG_CAPS = {
-    "doubao-seedream-5-0-pro-260628": ["文生图", "图生图（单图/多图 2-10）", "图层拆分（底图+≤16图层）", "交互编辑（坐标/框选/箭头）", "最高画质", "不支持组图"],
-    "doubao-seedream-5-0-260128": ["文生图", "图生图（多图 2-14）", "组图（一次≤15张关联图）", "性价比高", "可加水印"],
+  const IMG_META = {
+    "doubao-seedream-5-5-261028": {
+      pos: "最新旗舰", refs: "2-10 张", seq: false,
+      layers: "底图 + ≤99 图层", edit: true, rgba: "✓ 文生 / 图生",
+      size: "1K/1.5K/2K 或像素（0.92–4.62MP）",
+      cost: "高", use: "封面 / 海报 / 透明素材",
+      chips: ["文生图", "图生图（2-10 张）", "图层拆分（≤99 图层）", "原生 RGBA", "交互编辑", "2K 上限", "不支持组图"],
+    },
+    "doubao-seedream-5-0-pro-260628": {
+      pos: "最强画质", refs: "2-10 张", seq: false,
+      layers: "底图 + ≤16 图层", edit: true, rgba: "仅图生（1 张参考）",
+      size: "1K/1.5K/2K 或像素（0.92–4.62MP）",
+      cost: "高", use: "封面 / 海报 / 正式出图",
+      chips: ["文生图", "图生图（2-10 张）", "图层拆分（≤16 图层）", "交互编辑", "2K 上限", "不支持组图"],
+    },
+    "doubao-seedream-5-0-flash-260915": {
+      pos: "快速 / 性价比", refs: "2-10 张", seq: false,
+      layers: "底图 + ≤16 图层", edit: true, rgba: "仅图生（1 张参考）",
+      size: "1K/1.5K/2K 或像素（0.92–4.62MP）",
+      cost: "中 / 低", use: "分镜配图 / 批量试错",
+      chips: ["文生图", "图生图（2-10 张）", "图层拆分（≤16 图层）", "交互编辑", "快速", "不支持组图"],
+    },
+    "doubao-seedream-4-0-20260415": {
+      pos: "组图 / 4K", refs: "2-14 张", seq: true,
+      layers: "—", edit: false, rgba: "✗",
+      size: "1K/2K/4K 或像素（0.92–16.7MP）",
+      cost: "低", use: "组图 / 批量 / 旧项目",
+      chips: ["文生图", "图生图（2-14 张）", "组图（≤15 张）", "4K", "旧版 4.0"],
+    },
+    "doubao-seedream-5-0-260128": {
+      pos: "旧版 / 组图", refs: "2-14 张", seq: true,
+      layers: "—", edit: false, rgba: "✗",
+      size: "1K/2K/4K 或像素（≥3.69MP）",
+      cost: "低", use: "旧项目 / 组图 / 批量",
+      chips: ["文生图", "图生图（2-14 张）", "组图（≤15 张）", "4K", "旧版"],
+    },
+  };
+  const IMG_FALLBACK = {
+    pos: "—", refs: "—", seq: false, layers: "—", edit: false, rgba: "✗",
+    size: "—", cost: "—", use: "—", chips: ["文生图"],
   };
 
   function capVal(caps, k) {
@@ -1543,38 +1597,35 @@
     // 图片模型
     const imgIds = Object.keys(CFG.image_models || {});
     const IMG_ROWS = [
-      ["定位", { pro: "最强画质", lite: "性价比首选" }],
-      ["文生图", { pro: true, lite: true }],
-      ["图生图（参考图）", { pro: true, lite: true }],
-      ["多图参考数量", { pro: "2-10 张", lite: "2-14 张" }],
-      ["组图（一条提示词出多张关联图）", { pro: false, lite: "✓（≤15 张）" }],
-      ["图层拆分（底图+≤16 图层）", { pro: true, lite: false }],
-      ["交互编辑（坐标/框选/箭头）", { pro: true, lite: false }],
-      ["尺寸", { pro: "1K/2K/4K 或像素（≥3,686,400）", lite: "1K/2K/4K 或像素（≥3,686,400）" }],
-      ["水印开关", { pro: true, lite: true }],
-      ["成本", { pro: "高（质量优先）", lite: "低（批量划算）" }],
-      ["适用场景", { pro: "封面/海报/正式出图", lite: "分镜配图/批量试错" }],
+      ["定位", (m) => m.pos],
+      ["文生图", () => "✓"],
+      ["图生图（参考图）", () => "✓"],
+      ["多图参考数量", (m) => m.refs],
+      ["组图", (m) => m.seq ? "✓（≤15 张）" : "✗"],
+      ["图层拆分", (m) => m.layers],
+      ["交互编辑", (m) => m.edit ? "✓" : "✗"],
+      ["RGBA 透明图", (m) => m.rgba],
+      ["尺寸", (m) => m.size],
+      ["水印开关", () => "✓"],
+      ["成本", (m) => m.cost],
+      ["适用场景", (m) => m.use],
     ];
-    const proId = imgIds.find((id) => id.includes("pro")) || imgIds[0];
-    const liteId = imgIds.find((id) => !id.includes("pro")) || imgIds[1] || imgIds[0];
-    const imgNames = { pro: CFG.image_models[proId] || "Seedream pro", lite: CFG.image_models[liteId] || "Seedream lite" };
-    html += `<div class="cap-block"><h3>🖼 文生图 / 图生图模型（Seedream 5.0）</h3>
-    <table class="cap-table"><thead><tr><th>能力项</th><th>${escapeHtml(imgNames.pro)}</th><th>${escapeHtml(imgNames.lite)}</th></tr></thead><tbody>`;
-    IMG_ROWS.forEach(([l, m]) => {
-      const fmt = (v) => v === true ? "✓" : (v === false ? "✗" : escapeHtml(String(v)));
-      html += `<tr><td class="cap-row-name">${l}</td><td>${fmt(m.pro)}</td><td>${fmt(m.lite)}</td></tr>`;
+    html += `<div class="cap-block"><h3>🖼 文生图 / 图生图模型（Seedream 5.5 / 5.0 / 4.0）</h3>
+    <table class="cap-table"><thead><tr><th>能力项</th>${imgIds.map((id) => `<th>${escapeHtml(CFG.image_models[id] || id)}</th>`).join("")}</tr></thead><tbody>`;
+    IMG_ROWS.forEach(([label, fn]) => {
+      html += `<tr><td class="cap-row-name">${label}</td>${imgIds.map((id) => `<td>${escapeHtml(String(fn(IMG_META[id] || IMG_FALLBACK)))}</td>`).join("")}</tr>`;
     });
     html += `</tbody></table></div>`;
     html += `<div class="cap-block"><h3>图片模型列表</h3>`;
     imgIds.forEach((id) => {
       const label = CFG.image_models[id];
-      const items = IMG_CAPS[id] || ["文生图"];
-      html += `<div class="cap-model"><b>${escapeHtml(label)}</b><span class="cap-id">${escapeHtml(id)}</span><div class="cap-chips">${items.map((f) => `<span class="cap-chip">${escapeHtml(f)}</span>`).join("")}</div></div>`;
+      const meta = IMG_META[id] || IMG_FALLBACK;
+      html += `<div class="cap-model"><b>${escapeHtml(label)}</b><span class="cap-id">${escapeHtml(id)}</span><div class="cap-chips">${meta.chips.map((f) => `<span class="cap-chip">${escapeHtml(f)}</span>`).join("")}</div></div>`;
     });
-    html += `<div class="cap-note">※ 图片尺寸支持官方命名 1K/2K/4K 或像素值，像素下限需 ≥ 3,686,400（如 2560×1440）。组图仅在 Seedream 5.0 lite 支持（界面会自动隐藏/显示）。</div>`;
+    html += `<div class="cap-note">※ 5.5 / 5.0 pro / 5.0 flash 最高 2K（0.92–4.62MP）；旧版 5.0 / 4.x 才有 4K。组图仅旧版 5.0（lite）/ 4.x 支持，界面会自动隐藏。</div>`;
     html += `</div>`;
-    html += `<div class="cap-note">📹 使用提示：Seedance 2.5 首帧/尾帧生视频要求 ratio=adaptive（app 已自动处理）；视频编辑/延长要求 duration=-1 与 ratio=adaptive（app 已自动处理）。</div>`;
-    html += `<div class="cap-note">✓ 2.0 / 2.5 已开通，可直接使用其全部能力。</div>`;
+    html += `<div class="cap-note">📹 使用提示：Seedance 2.5 系列首帧/尾帧生视频要求 ratio=adaptive（app 已自动处理）；视频编辑/延长要求 duration=-1 与 ratio=adaptive（app 已自动处理）。</div>`;
+    html += `<div class="cap-note">✓ 模型是否可用以火山方舟控制台开通状态为准。</div>`;
     el.innerHTML = html;
   }
   async function loadUsage() {
@@ -1585,26 +1636,40 @@
         fetch("/api/usage?days=7"),
         fetch("/api/balance"),
       ]);
-      const usage = await usageResp.json();
       let balanceHtml = "";
       if (balResp.ok) {
-        const b = await balResp.json();
-        const avail = parseFloat(b.AvailableBalance || "0").toFixed(2);
-        const freeze = parseFloat(b.FreezeAmount || "0").toFixed(2);
-        const arrears = parseFloat(b.ArrearsBalance || "0").toFixed(2);
-        balanceHtml = `<div class="balance-bar">💳 账户可用余额：<b class="balance-num">¥${avail}</b>${freeze !== "0.00" ? `（冻结 ¥${freeze}）` : ""}${arrears !== "0.00" ? `（欠费 ¥${arrears}）` : ""}</div>`;
+        try {
+          const b = await balResp.json();
+          const avail = parseFloat(b.AvailableBalance || "0").toFixed(2);
+          const freeze = parseFloat(b.FreezeAmount || "0").toFixed(2);
+          const arrears = parseFloat(b.ArrearsBalance || "0").toFixed(2);
+          balanceHtml = `<div class="balance-bar">💳 账户可用余额：<b class="balance-num">¥${avail}</b>${freeze !== "0.00" ? `（冻结 ¥${freeze}）` : ""}${arrears !== "0.00" ? `（欠费 ¥${arrears}）` : ""}</div>`;
+        } catch (err) {}
       }
-      if (!usageResp.ok) throw new Error(usage.detail || usageResp.statusText);
+      if (!usageResp.ok) {
+        let msg = usageResp.statusText;
+        try {
+          const detail = await usageResp.json();
+          msg = detail.detail || msg;
+        } catch (err) {}
+        const tip = CFG && CFG.has_aks === false
+          ? `需要先在 config.json 或 config.secrets.json 配置火山引擎 AK/SK：
+            <br/>· <code>access_key_id</code>：AccessKey ID
+            <br/>· <code>secret_access_key</code>：Secret Access Key
+            <br/>· <code>usage_apikey_id</code>（可选）：API Key 的「资源 ID」
+            <br/>获取：控制台 → 访问控制 → 密钥管理（AK/SK）；API Key 管理页（资源 ID）`
+          : `火山用量接口暂时不可用（限流或服务端异常）；余额查询不受影响，请稍后重试。`;
+        body.innerHTML = balanceHtml + `
+          <div class="usage-msg">用量查询失败：${escapeHtml(msg)}</div>
+          <div class="usage-tip">${tip}</div>`;
+        return;
+      }
+      const usage = await usageResp.json();
       body.innerHTML = balanceHtml + renderUsageHtml(usage);
     } catch (err) {
       body.innerHTML = `
         <div class="usage-msg">查询失败：${escapeHtml(err.message)}</div>
-        <div class="usage-tip">需要先在 config.json 配置火山引擎 AK/SK：
-          <br/>· <code>access_key_id</code>：AccessKey ID
-          <br/>· <code>secret_access_key</code>：Secret Access Key
-          <br/>· <code>usage_apikey_id</code>（可选）：API Key 的「资源 ID」
-          <br/>获取：控制台 → 访问控制 → 密钥管理（AK/SK）；API Key 管理页（资源 ID）
-        </div>`;
+        <div class="usage-tip">检查网络或稍后重试；余额查询不受影响。</div>`;
     }
   }
 

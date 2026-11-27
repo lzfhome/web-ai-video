@@ -1,8 +1,8 @@
 """火山引擎 OpenAPI 调用（用量 + 余额）。
 
-统一走 open.volcengineapi.com，HMAC-SHA256 签名 v4。
-- 用量：GetInferenceUsage  (service=ark, region=cn-beijing)
-- 余额：QueryBalanceAcct (service=billing)
+HMAC-SHA256 签名 v4。
+- 用量：GetInferenceUsage (service=ark, region=cn-beijing, host=ark.cn-beijing.volcengineapi.com)
+- 余额：QueryBalanceAcct (service=billing, host=open.volcengineapi.com)
 """
 import datetime
 import hashlib
@@ -37,13 +37,14 @@ def _canonical_query(query: dict) -> str:
     return "&".join(f"{enc(k)}={enc(v)}" for k, v in sorted(query.items()))
 
 
-def _sign(ak: str, sk: str, service: str, region: str, query: dict, body_bytes: bytes, xdate: str) -> dict:
+def _sign(ak: str, sk: str, service: str, region: str, query: dict, body_bytes: bytes, xdate: str,
+          host: str = "open.volcengineapi.com") -> dict:
     cqs = _canonical_query(query)
     payload_hash = _hex_sha256(body_bytes)
 
     headers = {
         "content-type": "application/json; charset=utf-8",
-        "host": "open.volcengineapi.com",
+        "host": host,
         "x-content-sha256": payload_hash,
         "x-date": xdate,
     }
@@ -67,7 +68,7 @@ def _sign(ak: str, sk: str, service: str, region: str, query: dict, body_bytes: 
         f"SignedHeaders={signed_headers}, Signature={signature}"
     )
     return {
-        "Host": "open.volcengineapi.com",
+        "Host": host,
         "X-Date": xdate,
         "X-Content-Sha256": payload_hash,
         "Content-Type": "application/json; charset=utf-8",
@@ -75,12 +76,13 @@ def _sign(ak: str, sk: str, service: str, region: str, query: dict, body_bytes: 
     }
 
 
-async def _call(ak: str, sk: str, service: str, region: str, action: str, version: str, body: dict) -> dict:
+async def _call(ak: str, sk: str, service: str, region: str, action: str, version: str, body: dict,
+                host: str = "open.volcengineapi.com") -> dict:
     body_bytes = json.dumps(body, separators=(",", ":")).encode()
     query = {"Action": action, "Version": version}
     xdate = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    url = f"https://open.volcengineapi.com/?{_canonical_query(query)}"
-    headers = _sign(ak, sk, service, region, query, body_bytes, xdate)
+    url = f"https://{host}/?{_canonical_query(query)}"
+    headers = _sign(ak, sk, service, region, query, body_bytes, xdate, host)
 
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(url, headers=headers, content=body_bytes)
@@ -104,9 +106,12 @@ async def get_usage(ak: str, sk: str, start: str, end: str, apikey_id: str = "")
         "QueryInterval": "Day",
         "StartTime": start,
         "EndTime": end,
+        "ProjectName": "default",
         "ShowWindowDetail": True,
     }
-    data = await _call(ak, sk, "ark", "cn-beijing", "GetInferenceUsage", "2024-01-01", body)
+    # 用量接口走方舟专用域名；open.volcengineapi.com 会返回 500
+    data = await _call(ak, sk, "ark", "cn-beijing", "GetInferenceUsage", "2024-01-01", body,
+                       host="ark.cn-beijing.volcengineapi.com")
     result = data.get("Result", {})
     fields = [f.get("Name", "") for f in result.get("Fields", [])]
     rows = []

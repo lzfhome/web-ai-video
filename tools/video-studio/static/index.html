@@ -41,7 +41,7 @@
           <div class="settings-grid">
             <div class="field full">
               <label>模型（切换后能力自动适配）</label>
-              <select id="model" data-tip="选择视频生成模型，选中后下方列出该模型的能力，界面自动显示/隐藏对应功能。\n· mini：高性价比，480p/720p，仅首帧图生，不支持编辑/延长\n· fast：快，支持首尾帧/参考图\n· 2.0：专业级，最高4k，支持编辑/延长/画面运动\n· 2.5：长叙事，30秒/段+多轮延长，全模态参考"></select>
+              <select id="model" data-tip="选择视频生成模型，选中后下方列出该模型的能力，界面自动显示/隐藏对应功能。\n· 2.5 flash：480p/720p，30秒，全模态参考，性价比\n· 2.5：最高4K，30秒/段+多轮延长，全模态参考\n· mini：旧版高性价比，480p/720p，仅首帧图生\n· fast：旧版快速，支持首尾帧/参考图\n· 2.0：旧版专业级，最高4K，支持编辑/延长/画面运动"></select>
             </div>
             <div class="field full" id="task-type-field">
               <label>任务类型</label>
@@ -119,7 +119,7 @@
               <div class="field">
                 <label>图片比例</label>
                 <select id="img-size">
-                  <option value="4K">4K（官方命名尺寸）</option>
+                  <option value="4K">4K（仅旧版 5.0 / 4.x）</option>
                   <option value="2K" selected>2K（官方命名尺寸）</option>
                   <option value="2560x1440">16:9 · 2560×1440</option>
                   <option value="1440x2560">9:16 · 1440×2560</option>
@@ -135,7 +135,7 @@
               </div>
             </div>
             <div class="toggles" style="margin-top:12px;">
-              <label class="toggle" id="img-seq-wrap" data-tip="组图生成：一条提示词生成一组内容关联的图片（如同一角色不同动作/场景，最多15张）。\n· 仅 Seedream 5.0 lite / 4.x 支持；5.0 pro 不支持组图（会自动隐藏）">组图生成 <input type="checkbox" id="img-seq" /></label>
+              <label class="toggle" id="img-seq-wrap" data-tip="组图生成：一条提示词生成一组内容关联的图片（如同一角色不同动作/场景，最多15张）。\n· 仅旧版 Seedream 5.0（lite）/ 4.x 支持；5.5 / 5.0 pro / 5.0 flash 不支持组图（会自动隐藏）">组图生成 <input type="checkbox" id="img-seq" /></label>
               <label class="toggle" data-tip="在生成的图片右下角加「AI 生成」水印">加水印 <input type="checkbox" id="img-watermark" /></label>
             </div>
             <div class="section" id="img-ref-section" style="margin-top:14px;">

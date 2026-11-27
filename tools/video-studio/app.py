@@ -66,9 +66,19 @@ chain_store = ChainJobStore(str(CHAIN_FILE))
 extend_store = ExtendJobStore(str(EXTEND_FILE))
 image_job_store = ImageJobStore(str(IMAGE_JOBS_FILE))
 
+# 火山 OpenAPI 有频率限制；短时间重复打开用量页时优先复用结果
+_USAGE_CACHE = {"key": None, "at": 0.0, "data": None}
+_BALANCE_CACHE = {"at": 0.0, "data": None}
+
 VALID_TYPES = {"text", "image_url", "video_url", "audio_url"}
 VALID_ROLES = {"first_frame", "last_frame", "reference_image", "reference_video", "reference_audio"}
 ALLOWED_IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp"}
+# 这三款只出单图，不支持组图；参考图上限 10 张（旧版 5.0 lite / 4.x 为 14 张）
+NO_SEQ_IMAGE_MODELS = {
+    "doubao-seedream-5-5-261028",
+    "doubao-seedream-5-0-pro-260628",
+    "doubao-seedream-5-0-flash-260915",
+}
 
 
 class ContentItem(BaseModel):
@@ -119,7 +129,7 @@ class StoryboardRequest(BaseModel):
 
 
 class ImageJobRequest(BaseModel):
-    model: str = Field(default=CONFIG["default_model"])
+    model: str = Field(default=CONFIG.get("image_model") or CONFIG["default_model"])
     prompts: list[str]
     size: str = "2560x1440"
     watermark: bool = False
@@ -328,14 +338,34 @@ async def get_usage(days: int = 7):
     ak = CONFIG.get("access_key_id", "")
     sk = CONFIG.get("secret_access_key", "")
     if not ak or not sk:
-        raise HTTPException(400, "未配置 access_key_id / secret_access_key，请在 config.json 填写火山引擎 AK/SK")
+        raise HTTPException(400, "未配置 access_key_id / secret_access_key，请在 config.secrets.json（或 config.json）填写火山引擎 AK/SK")
     today = time.strftime("%Y-%m-%d")
     start = time.strftime("%Y-%m-%d", time.localtime(time.time() - days * 86400))
+    key = (start, today, CONFIG.get("usage_apikey_id", ""))
+    now = time.time()
+
+    # 60 秒内复用成功结果，避免反复打开页面触发 OpenAPI 限流
+    if _USAGE_CACHE["data"] is not None and _USAGE_CACHE["key"] == key and now - _USAGE_CACHE["at"] < 60:
+        return {**_USAGE_CACHE["data"], "cached": True}
+
     try:
         rows = await volc_usage.get_usage(ak, sk, start, today, CONFIG.get("usage_apikey_id", ""))
     except Exception as exc:
+        msg = str(exc)
+        limited = "429" in msg or "FlowLimitExceeded" in msg
+        if limited and _USAGE_CACHE["data"] is not None:
+            return {**_USAGE_CACHE["data"], "cached": True, "stale": True,
+                    "warning": "火山 OpenAPI 限流，已返回上次成功结果"}
+        if limited:
+            raise HTTPException(429, "火山 OpenAPI 限流（429 FlowLimitExceeded），请 30–60 秒后重试")
+        if "InternalError" in msg:
+            raise HTTPException(503, "火山用量接口暂时返回 InternalError（服务端异常）；余额查询正常，请稍后重试或到控制台查看用量")
+        if "timed out" in msg.lower() or type(exc).__name__ in ("ReadTimeout", "TimeoutException"):
+            raise HTTPException(504, "火山用量接口超时，请稍后重试；余额查询不受影响")
         raise HTTPException(502, f"查询用量失败: {exc}")
-    return {"start": start, "end": today, "rows": rows}
+    data = {"start": start, "end": today, "rows": rows}
+    _USAGE_CACHE.update({"key": key, "at": now, "data": data})
+    return data
 
 
 @app.get("/api/balance")
@@ -343,11 +373,19 @@ async def get_balance():
     ak = CONFIG.get("access_key_id", "")
     sk = CONFIG.get("secret_access_key", "")
     if not ak or not sk:
-        raise HTTPException(400, "未配置 access_key_id / secret_access_key，请在 config.json 填写火山引擎 AK/SK")
+        raise HTTPException(400, "未配置 access_key_id / secret_access_key，请在 config.secrets.json（或 config.json）填写火山引擎 AK/SK")
+    now = time.time()
+    if _BALANCE_CACHE["data"] is not None and now - _BALANCE_CACHE["at"] < 30:
+        return {**_BALANCE_CACHE["data"], "cached": True}
     try:
         bal = await volc_usage.get_balance(ak, sk)
     except Exception as exc:
+        msg = str(exc)
+        if ("429" in msg or "FlowLimitExceeded" in msg) and _BALANCE_CACHE["data"] is not None:
+            return {**_BALANCE_CACHE["data"], "cached": True, "stale": True,
+                    "warning": "火山 OpenAPI 限流，已返回上次成功结果"}
         raise HTTPException(502, f"查询余额失败: {exc}")
+    _BALANCE_CACHE.update({"at": now, "data": bal})
     return bal
 
 
@@ -654,6 +692,11 @@ async def create_image_job(req: ImageJobRequest):
         raise HTTPException(500, "config.json 中未配置 api_key")
     if req.model not in CONFIG.get("image_models", {}):
         raise HTTPException(400, f"{req.model} 不是已配置的图片生成模型")
+    if req.sequential and req.model in NO_SEQ_IMAGE_MODELS:
+        raise HTTPException(400, f"{req.model} 不支持组图（sequential_image_generation）")
+    max_refs = 10 if req.model in NO_SEQ_IMAGE_MODELS else 14
+    if len(req.references or []) > max_refs:
+        raise HTTPException(400, f"{req.model} 最多支持 {max_refs} 张参考图，当前 {len(req.references)} 张")
     if not req.prompts:
         raise HTTPException(400, "没有可生成的提示词")
     # 自动清理卡死任务：排队/运行超过 3 分钟的旧任务标记为中断，避免挡住新提交
