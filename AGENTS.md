@@ -28,6 +28,7 @@ AIWork/
 │   │   ├── engines/dom/      # DOM/CSS + Three.js 引擎 + 录制工具
 │   │   └── engines/canvas/   # Canvas + WebCodecs 快速通道
 │   ├── image/                # Ark / Seedream / Seedance 素材引擎
+│   ├── media/                # B 站视频/音频下载（yutto）
 │   └── vendor/               # three.js 等引擎依赖
 ├── workspaces/
 │   └── vibe-knowledge/       # 知识短片车间
@@ -51,7 +52,7 @@ AIWork/
 | 层 | 位置 | 说明 |
 |---|---|---|
 | 原料 | `resources/` | 字体、音乐、音效、风格、参考，所有车间共用 |
-| 引擎 | `cine/audio` `cine/video` `cine/image` | 可复用的合成能力 |
+| 引擎 | `cine/audio` `cine/video` `cine/image` `cine/media` | 可复用的合成 / 取素材能力 |
 | 产线 | `workspaces/<产品>/line/<型号>/` | 选引擎、定流程，直接生产 |
 | 产物 | `workspaces/<产品>/projects/<work>/` | 源码、素材、build、deliveries，整目录不进 git |
 | 工具 | `tools/` | CLI、本地应用、工具链 |
@@ -206,6 +207,7 @@ python project.py deliver sky-blue --title "片名" --poster 1
 | `dom-narrated` | `cine/video/engines/dom` + `cine/audio` | 旁白、复杂 DOM/CSS、46 套风格、片段叠加 |
 | `poetry` | DOM/CSS + 书封/诗句 | 书封做背景，诗句代码排版，BGM |
 | `poetry-tts` | poetry + `cine/audio/clients/doubao_tts.py` | 同上，但每场时长由豆包配音决定，文字跟着声音出 |
+| `fe-gba` | `cine/image`（Seedream 帧图 + Seedance 2.5 flash） | GBA 火纹单镜头：原画参考 → 帧图 → 5–30s 视频 |
 
 产线入口：`workspaces/vibe-knowledge/line/<型号>/render.py`；文档：同目录 `AGENTS.md`。
 
@@ -217,6 +219,7 @@ python project.py deliver sky-blue --title "片名" --poster 1
 |---|---|
 | `cine/audio` | 配乐、音效、旁白时间轴、混音 |
 | `cine/image` | Ark：Seedream 图 / Seedance 视频 |
+| `cine/media` | B 站视频/音频下载（yutto）：封面 + meta.json |
 | `cine/video` | 交付、批量队列、系列索引 |
 | `cine/video/engines/dom` | DOM/CSS + Three.js 渲染引擎 |
 | `cine/video/engines/canvas` | Canvas + WebCodecs 快速通道 |
@@ -225,6 +228,7 @@ python project.py deliver sky-blue --title "片名" --poster 1
 ## 素材
 
 - 共享字体/音乐/音效/风格/音色/参考：`resources/`。
+- B 站参考视频：`python cine/media/engines/bilibili.py download BV...`，默认落 `resources/references/bilibili/<BV>/`（视频 + `cover.jpg` + `meta.json`）；未登录只有 480P，1080P+ 先跑 `login` 扫码。
 - 作品专属素材：`projects/<work>/lessons/<lesson>/assets/`。
 - AI 生成图/视频：`python cine/image/engines/ark.py image|video|assets ...`，默认 dry-run，确认后加 `--yes`。
 - 生成画面默认带「AI 示意图 / AI 生成画面」角标。

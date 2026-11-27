@@ -32,6 +32,35 @@
 
 ---
 
+## 2026-11-25 · 新增 fe-gba 产线（GBA 火纹镜头）
+
+- **变更**：
+  - 新增 `workspaces/vibe-knowledge/line/fe-gba/`：`AGENTS.md`、`TEMPLATE.md`、`defaults.json`、`schema.json`、`work.skeleton.json`、`preflight.py`、`render.py`、`qa.py`、`smoke_test.py`、`examples/eirika.work.json`。
+  - 流程固定为：`work.json`（剧情/动作/镜头）→ Seedream 5.5 帧图 → Seedance 2.5 flash 首帧视频 → QA 接触表。
+  - `project.py render` 支持 `--line fe-gba`，新增 `--yes` / `--shot-id` / `--keyframe-only` / `--skip-keyframe`；`project.py qa` 转到该产线的 `qa.py`。
+  - 默认 `seed=20261125`、`max_takes=1`；默认 dry-run，输出已存在默认跳过；重跑视频用 `--force`，重出帧图用 `--force-keyframe`。
+  - 新建示例项目 `projects/fe-gba-eirika/`（不进 git），并保留 Eirika 5s/720p 的 A/B 测试片。
+- **原因**：把 Seedance 2.5 flash 的 GBA 火纹测试固化成可复现流程，先定帧图和动作描述再生成，避免靠反复抽卡碰结果。
+- **影响**：只新增产线，不改现有 `canvas-bgm` / `dom-narrated` / `poetry` / `poetry-tts` 的行为；`cine/image` 的 `ark.py` 补了视频 `--reference` 参数。
+- **迁移**：无；新作品从 `line/fe-gba/work.skeleton.json` 复制，命令见 `line/fe-gba/TEMPLATE.md`。
+- **相关 files**：`workspaces/vibe-knowledge/line/fe-gba/**`、`project.py`、`cine/image/engines/ark.py`、`AGENTS.md`
+
+---
+
+## 2026-11-25 · 新增 cine/media（B 站素材下载）
+
+- **变更**：
+  - 新增 `cine/media/`：`engines/bilibili.py`（CLI：`info/download/login/status/setup/doctor`）+ `clients/yutto.py`（定位 venv/ffmpeg/登录态，子进程调用）。
+  - 上游 `yutto` 源码 vendor 到 `repos/yutto/`（commit `a560893`，GPL-3.0-only）；运行时装在 `tools/local/venv-yutto`（`yutto==2.3.1`），不写 C 盘；登录态在 `tools/local/yutto-auth.toml`。
+  - 默认产物 `resources/references/bilibili/<BV>/`：媒体文件 + `cover.jpg` + `meta.json`；stdout 统一 JSON。
+  - `cine/AGENTS.md`、根 `AGENTS.md`、`repos/SOURCES.md` 同步登记。
+- **原因**：把 B 站参考视频的获取固化成可复用的 cine 子域，换一个 agent 也能直接跑，不再散落临时脚本。
+- **影响**：新增目录与工具，不改现有渲染管线；`resources/references/**/*.mp4|jpg` 仍按原规则忽略。
+- **迁移**：新克隆仓库先跑 `python cine/media/engines/bilibili.py setup`；登录用 `login` 扫码。
+- **相关 files**：`cine/media/AGENTS.md`、`cine/media/engines/bilibili.py`、`cine/media/clients/yutto.py`、`repos/SOURCES.md`
+
+---
+
 ## 2026-11-19 · 新增视频右上角水印工具
 
 - **变更**：

@@ -67,6 +67,9 @@ cine/audio/generated/
 # 本会话下载的 Node/ffmpeg/benchmark 工具链，放仓库内但不入库
 tools/local/
 
+# ===== 本地学习资料 / 教程（体积大，不进 git） =====
+learning/
+
 # ===== 系统 =====
 .DS_Store
 Thumbs.db
