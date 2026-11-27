@@ -30,6 +30,7 @@ repos/**/*.mov
 repos/**/*.wav
 repos/**/*.m4a
 repos/**/*.gif
+repos/**/samples/*.png
 
 # ===== 参考资料里的重媒体（要版本化请用 Git LFS） =====
 resources/references/bilibili/
