@@ -33,6 +33,10 @@ repos/**/*.m4a
 repos/**/*.gif
 
 # ===== 参考资料里的重媒体（要版本化请用 Git LFS） =====
+resources/references/bilibili/
+resources/references/fight-skill-text/
+resources/references/slash-skills-subscription-main/
+resources/references/wengao-skill/
 resources/references/**/*.mp4
 resources/references/**/*.mov
 resources/references/**/*.wav
